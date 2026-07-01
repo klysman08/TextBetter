@@ -9,7 +9,7 @@ if (typeof chrome === "undefined" || !chrome.storage) {
       theme: "dark",
       muted: false,
       apiKey: "AIzaSyMockKeyForLocalPreviews",
-      selectedModel: "gemini-3.1-flash-lite",
+      selectedModel: "gemini-3.5-flash",
       stats: {
         totalRequests: 24,
         inputTokens: 1480,
@@ -282,7 +282,7 @@ async function initializePopup() {
   }
 
   // Set Model text
-  activeModelName.textContent = settings.selectedModel || "gemini-3.1-flash-lite";
+  activeModelName.textContent = settings.selectedModel || "gemini-3.5-flash";
 
   // Set API Key status badge
   if (settings.apiKey) {

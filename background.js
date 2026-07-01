@@ -19,8 +19,8 @@ async function handleGenerateText(request) {
   // Retrieve API settings from storage
   const settings = await chrome.storage.local.get(["apiKey", "selectedModel"]);
   const apiKey = settings.apiKey;
-  // Default to gemini-3.1-flash-lite as requested by user
-  const model = settings.selectedModel || "gemini-3.1-flash-lite";
+  // Default to gemini-3.5-flash
+  const model = settings.selectedModel || "gemini-3.5-flash";
 
   if (!apiKey) {
     throw new Error("API Key is missing. Please configure your API key in the extension settings.");
