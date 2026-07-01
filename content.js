@@ -352,8 +352,15 @@
         }
 
         .tb-opt-icon {
-          font-size: 14px;
+          width: 14px;
+          height: 14px;
           flex-shrink: 0;
+          display: inline-block;
+          stroke: currentColor;
+          fill: none;
+          stroke-width: 2;
+          stroke-linecap: round;
+          stroke-linejoin: round;
         }
 
         /* Loading Skeleton */
@@ -447,37 +454,45 @@
       
       <div class="tb-root">
         <!-- Floating Trigger Button -->
-        <div id="tb-trigger-btn" class="tb-floating tb-trigger hidden" title="TextBetter Writing Assistant">✦</div>
+        <div id="tb-trigger-btn" class="tb-floating tb-trigger hidden" title="TextBetter Writing Assistant">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
+          </svg>
+        </div>
         
         <!-- Main Popover Widget -->
         <div id="tb-main-card" class="tb-floating tb-card hidden">
           <div class="tb-header">
             <span>TEXTBETTER AI WRITER</span>
-            <button class="tb-close" id="tb-close-btn" type="button">✕</button>
+            <button class="tb-close" id="tb-close-btn" type="button" aria-label="Close">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M18 6 6 18M6 6l12 12"></path>
+              </svg>
+            </button>
           </div>
 
           <!-- Options Grid -->
           <div id="tb-panel-options" class="tb-options">
             <button class="tb-opt-btn" data-action="rewrite">
-              <span class="tb-opt-icon">📝</span> Rewrite
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> Rewrite
             </button>
             <button class="tb-opt-btn" data-action="review">
-              <span class="tb-opt-icon">🔍</span> Correct
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><path d="m9 11 3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Correct
             </button>
             <button class="tb-opt-btn" data-action="professional">
-              <span class="tb-opt-icon">💼</span> Professional
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/></svg> Professional
             </button>
             <button class="tb-opt-btn" data-action="appealing">
-              <span class="tb-opt-icon">✨</span> Appealing
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275Z"/><path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5Z"/><path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1Z"/></svg> Appealing
             </button>
             <button class="tb-opt-btn" data-action="emojis">
-              <span class="tb-opt-icon">😊</span> Add Emojis
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg> Add Emojis
             </button>
             <button class="tb-opt-btn" data-action="detail">
-              <span class="tb-opt-icon">📄</span> Detail It
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Detail It
             </button>
             <button class="tb-opt-btn" data-action="shorten" style="grid-column: span 2;">
-              <span class="tb-opt-icon">✂️</span> Shorten Text
+              <svg class="tb-opt-icon" viewBox="0 0 24 24"><circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><line x1="20" y1="4" x2="8.12" y2="15.88"/><line x1="14.47" y1="14.48" x2="20" y2="20"/><line x1="8.12" y1="8.12" x2="12" y2="12"/></svg> Shorten Text
             </button>
           </div>
 

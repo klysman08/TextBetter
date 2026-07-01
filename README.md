@@ -1,5 +1,7 @@
 # TextBetter — Premium Gemini-Powered AI Writing Assistant
 
+Official Site: [textbetter.astrofocus.app](https://textbetter.astrofocus.app)
+
 TextBetter is a privacy-first, client-side Chrome Extension that enhances your writing instantly on any website. Powered by Google's Gemini API, TextBetter injects a sleek, interactive widget directly into your browser whenever you highlight text, allowing you to edit, correct, or rephrase it dynamically.
 
 Designed with **Shadcn Zinc** aesthetics, a native Web Audio synthesis engine, and developer previews, it offers a premium desktop editing experience.

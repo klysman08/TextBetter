@@ -82,7 +82,8 @@
 
     .logo-symbol {
       color: hsl(var(--foreground));
-      font-size: 1.1rem;
+      width: 1.1rem;
+      height: 1.1rem;
       animation: rotate 12s infinite linear;
       display: inline-block;
     }
@@ -119,15 +120,15 @@
       border-color: hsl(var(--border));
     }
 
-    .sun-icon { display: block; }
-    .moon-icon { display: none; }
+    .sun-icon { display: inline-flex; align-items: center; gap: 0.25rem; }
+    .moon-icon { display: none; align-items: center; gap: 0.25rem; }
     .dark .sun-icon { display: none; }
-    .dark .moon-icon { display: block; }
+    .dark .moon-icon { display: inline-flex; align-items: center; gap: 0.25rem; }
 
-    .sound-on-icon { display: block; }
-    .sound-off-icon { display: none; }
+    .sound-on-icon { display: inline-flex; align-items: center; gap: 0.25rem; }
+    .sound-off-icon { display: none; align-items: center; gap: 0.25rem; }
     .muted .sound-on-icon { display: none; }
-    .muted .sound-off-icon { display: block; }
+    .muted .sound-off-icon { display: inline-flex; align-items: center; gap: 0.25rem; }
 
     /* Card Layouts */
     .card {
@@ -465,17 +466,43 @@
   <!-- Header -->
   <header>
     <div class="title-wrapper">
-      <span class="logo-symbol">✦</span>
+      <svg class="logo-symbol" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
+      </svg>
       <span class="logo">TextBetter</span>
     </div>
     <div class="header-actions">
       <button class="theme-toggle-btn" id="popup-sound-toggle" type="button" aria-label="Toggle Sound">
-        <span class="sound-on-icon">🔊 Sound</span>
-        <span class="sound-off-icon">🔇 Mute</span>
+        <span class="sound-on-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+          </svg>
+          Sound
+        </span>
+        <span class="sound-off-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="22" y1="9" x2="16" y2="15"></line>
+            <line x1="16" y1="9" x2="22" y2="15"></line>
+          </svg>
+          Mute
+        </span>
       </button>
       <button class="theme-toggle-btn" id="popup-theme-toggle" type="button" aria-label="Toggle Theme">
-        <span class="sun-icon">☀️ Light</span>
-        <span class="moon-icon">🌙 Dark</span>
+        <span class="sun-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+          </svg>
+          Light
+        </span>
+        <span class="moon-icon">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+          </svg>
+          Dark
+        </span>
       </button>
     </div>
   </header>

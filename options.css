@@ -128,10 +128,10 @@ body {
 .text-center { text-align: center; }
 
 /* Theme Toggle Button Specifics */
-.sun-icon { display: block; }
-.moon-icon { display: none; }
+.sun-icon { display: flex; align-items: center; justify-content: center; }
+.moon-icon { display: none; align-items: center; justify-content: center; }
 .dark .sun-icon { display: none; }
-.dark .moon-icon { display: block; }
+.dark .moon-icon { display: flex; align-items: center; justify-content: center; }
 
 /* Base components */
 .border-b {
@@ -154,10 +154,7 @@ body {
 
 /* Logo Icon Styling */
 .logo-icon {
-  font-size: 1.5rem;
-  background: linear-gradient(135deg, hsl(var(--foreground)) 30%, hsl(var(--muted-foreground)));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: hsl(var(--foreground));
   display: inline-block;
   animation: shine 3s infinite linear;
 }

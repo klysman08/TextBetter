@@ -2,6 +2,8 @@
   "manifest_version": 3,
   "name": "TextBetter",
   "version": "1.0.0",
+  "author": "klysman08",
+  "homepage_url": "https://textbetter.astrofocus.app",
   "description": "Your premium, Gemini-powered AI writing assistant with Shadcn Zinc styling.",
   "permissions": [
     "storage"
