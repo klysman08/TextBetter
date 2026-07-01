@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TextBetter - Settings</title>
+  <link rel="stylesheet" href="options.css">
+</head>
+<body class="bg-background text-foreground min-h-screen font-sans antialiased">
+  <div class="container mx-auto max-w-4xl py-10 px-4 md:px-8">
+    <!-- Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between border-b pb-6 mb-8 gap-4">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="logo-icon">✦</span>
+          <h1 class="text-3xl font-bold tracking-tight">TextBetter</h1>
+        </div>
+        <p class="text-muted-foreground mt-1">Configure your writing assistant, API keys, and custom prompts.</p>
+      </div>
+      
+      <!-- Theme Switcher & Actions -->
+      <div class="flex items-center gap-2">
+        <button id="theme-toggle" class="btn btn-outline btn-icon" title="Toggle Theme" type="button">
+          <span class="sun-icon">☀️</span>
+          <span class="moon-icon">🌙</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Config Area -->
+    <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      
+      <!-- Sidebar / Left Config Card -->
+      <section class="md:col-span-1 flex flex-col gap-6">
+        <div class="card p-6">
+          <h2 class="text-lg font-semibold tracking-tight mb-4">API Configuration</h2>
+          
+          <form id="api-form" class="space-y-4">
+            <!-- API Key -->
+            <div class="space-y-2">
+              <label for="api-key" class="text-sm font-medium leading-none">Gemini API Key</label>
+              <div class="relative flex">
+                <input id="api-key" type="password" placeholder="AIzaSy..." autocomplete="off" class="input flex-1 pr-10">
+                <button id="toggle-key-visibility" type="button" class="absolute right-0 top-0 bottom-0 px-3 text-muted-foreground hover:text-foreground text-sm">Show</button>
+              </div>
+              <p class="text-xs text-muted-foreground">
+                Get one from <a href="https://aistudio.google.com/apikey" target="_blank" class="underline hover:text-primary">Google AI Studio</a>.
+              </p>
+            </div>
+
+            <!-- Model Selection -->
+            <div class="space-y-2">
+              <label for="model-select" class="text-sm font-medium leading-none">LLM Model</label>
+              <select id="model-select" class="select w-full">
+                <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite (Fastest)</option>
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro (High Quality)</option>
+              </select>
+            </div>
+
+            <!-- Status Indicator and Verification -->
+            <div class="pt-2 flex flex-col gap-2">
+              <button id="test-api-btn" type="button" class="btn btn-outline w-full justify-center">
+                <span class="btn-spinner hidden"></span>
+                Test Connection
+              </button>
+              <div id="test-status" class="text-xs font-medium text-center hidden"></div>
+            </div>
+            
+            <div class="border-t pt-4">
+              <button id="save-settings-btn" type="button" class="btn btn-primary w-full justify-center">Save Settings</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card p-6 text-sm">
+          <h3 class="font-semibold mb-2">How it works</h3>
+          <p class="text-muted-foreground leading-relaxed mb-2">
+            Select text on any webpage or double-click to select a word. A floating TextBetter action bar will appear immediately.
+          </p>
+          <p class="text-muted-foreground leading-relaxed">
+            Choose an action (like "Make it professional") to rewrite the text. You can then copy it or insert it directly back into input fields.
+          </p>
+        </div>
+      </section>
+
+      <!-- Prompts Configuration Panel -->
+      <section class="md:col-span-2 card p-6">
+        <div class="flex items-center justify-between border-b pb-4 mb-4">
+          <div>
+            <h2 class="text-lg font-semibold tracking-tight">Prompt Customization</h2>
+            <p class="text-xs text-muted-foreground mt-0.5">Customize the instruction templates sent to Gemini for each action.</p>
+          </div>
+          <button id="reset-prompts-btn" type="button" class="btn btn-outline btn-sm">Reset Defaults</button>
+        </div>
+
+        <div class="space-y-6" id="prompts-list">
+          <!-- Rewrite -->
+          <div class="space-y-2">
+            <label for="prompt-rewrite" class="text-sm font-medium">Rewrite</label>
+            <textarea id="prompt-rewrite" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Review -->
+          <div class="space-y-2">
+            <label for="prompt-review" class="text-sm font-medium">Review & Correct</label>
+            <textarea id="prompt-review" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Make it professional -->
+          <div class="space-y-2">
+            <label for="prompt-professional" class="text-sm font-medium">Make it Professional</label>
+            <textarea id="prompt-professional" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Make it more appealing -->
+          <div class="space-y-2">
+            <label for="prompt-appealing" class="text-sm font-medium">Make it More Appealing</label>
+            <textarea id="prompt-appealing" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Add emojis -->
+          <div class="space-y-2">
+            <label for="prompt-emojis" class="text-sm font-medium">Add Emojis</label>
+            <textarea id="prompt-emojis" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Detail it -->
+          <div class="space-y-2">
+            <label for="prompt-detail" class="text-sm font-medium">Detail it</label>
+            <textarea id="prompt-detail" rows="2" class="textarea w-full"></textarea>
+          </div>
+
+          <!-- Shorten it -->
+          <div class="space-y-2">
+            <label for="prompt-shorten" class="text-sm font-medium">Shorten it</label>
+            <textarea id="prompt-shorten" rows="2" class="textarea w-full"></textarea>
+          </div>
+        </div>
+      </section>
+      
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 text-center text-xs text-muted-foreground border-t pt-6">
+      <p>TextBetter AI Writing Assistant. All API calls are executed directly from your browser to Google Gemini API servers.</p>
+    </footer>
+  </div>
+
+  <!-- Toast notification system -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <script src="options.js"></script>
+</body>
+</html>
