@@ -78,12 +78,63 @@ async function handleGenerateText(request) {
       data.candidates[0].content.parts[0] &&
       data.candidates[0].content.parts[0].text
     ) {
-      return data.candidates[0].content.parts[0].text;
+      const generatedText = data.candidates[0].content.parts[0].text;
+      
+      // Update usage metrics asynchronously
+      updateUsageStats(request.actionType, prompt.length, generatedText, data.usageMetadata);
+
+      return generatedText;
     } else {
       throw new Error("Invalid response format received from Gemini API.");
     }
   } catch (error) {
     console.error("Error generating text:", error);
     throw error;
+  }
+}
+
+/**
+ * Update usage statistics in local storage
+ */
+async function updateUsageStats(actionType, inputChars, outputText, usageMetadata) {
+  try {
+    const result = await chrome.storage.local.get("stats");
+    let stats = result.stats;
+
+    // Initialize stats if not present
+    if (!stats) {
+      stats = {
+        totalRequests: 0,
+        inputTokens: 0,
+        outputTokens: 0,
+        actionCounts: {
+          rewrite: 0,
+          review: 0,
+          professional: 0,
+          appealing: 0,
+          emojis: 0,
+          detail: 0,
+          shorten: 0
+        }
+      };
+    }
+
+    // Default calculations if usageMetadata is missing
+    const promptTokens = usageMetadata?.promptTokenCount || Math.ceil(inputChars / 4);
+    const candidateTokens = usageMetadata?.candidatesTokenCount || Math.ceil(outputText.length / 4);
+
+    // Increment values safely
+    stats.totalRequests = (stats.totalRequests || 0) + 1;
+    stats.inputTokens = (stats.inputTokens || 0) + promptTokens;
+    stats.outputTokens = (stats.outputTokens || 0) + candidateTokens;
+
+    if (actionType) {
+      if (!stats.actionCounts) stats.actionCounts = {};
+      stats.actionCounts[actionType] = (stats.actionCounts[actionType] || 0) + 1;
+    }
+
+    await chrome.storage.local.set({ stats });
+  } catch (err) {
+    console.error("Error writing usage stats:", err);
   }
 }

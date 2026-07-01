@@ -628,7 +628,8 @@
       {
         action: "generateText",
         prompt: activeSelectionText,
-        systemInstruction: systemPrompt
+        systemInstruction: systemPrompt,
+        actionType: action
       },
       (response) => {
         if (chrome.runtime.lastError) {
