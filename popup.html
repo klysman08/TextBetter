@@ -92,7 +92,13 @@
       to { transform: rotate(360deg); }
     }
 
-    /* Theme Toggle */
+    /* Header Action Button Group */
+    .header-actions {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    /* Theme & Sound Toggles */
     .theme-toggle-btn {
       background: none;
       border: 1px solid hsl(var(--border));
@@ -117,6 +123,11 @@
     .moon-icon { display: none; }
     .dark .sun-icon { display: none; }
     .dark .moon-icon { display: block; }
+
+    .sound-on-icon { display: block; }
+    .sound-off-icon { display: none; }
+    .muted .sound-on-icon { display: none; }
+    .muted .sound-off-icon { display: block; }
 
     /* Card Layouts */
     .card {
@@ -457,10 +468,16 @@
       <span class="logo-symbol">✦</span>
       <span class="logo">TextBetter</span>
     </div>
-    <button class="theme-toggle-btn" id="popup-theme-toggle" type="button" aria-label="Toggle Theme">
-      <span class="sun-icon">☀️ Light</span>
-      <span class="moon-icon">🌙 Dark</span>
-    </button>
+    <div class="header-actions">
+      <button class="theme-toggle-btn" id="popup-sound-toggle" type="button" aria-label="Toggle Sound">
+        <span class="sound-on-icon">🔊 Sound</span>
+        <span class="sound-off-icon">🔇 Mute</span>
+      </button>
+      <button class="theme-toggle-btn" id="popup-theme-toggle" type="button" aria-label="Toggle Theme">
+        <span class="sun-icon">☀️ Light</span>
+        <span class="moon-icon">🌙 Dark</span>
+      </button>
+    </div>
   </header>
 
   <!-- Main Config Section -->

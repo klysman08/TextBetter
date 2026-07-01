@@ -1,4 +1,4 @@
-// popup.js - Browser action popup script with upgraded analytics dashboard
+// popup.js - Browser action popup script with analytics and UI sounds
 
 // Mock chrome API for local testing outside Chrome Extension environment
 if (typeof chrome === "undefined" || !chrome.storage) {
@@ -7,6 +7,7 @@ if (typeof chrome === "undefined" || !chrome.storage) {
     localStorage.setItem("tb_mock_storage", JSON.stringify({
       enabled: true,
       theme: "dark",
+      muted: false,
       apiKey: "AIzaSyMockKeyForLocalPreviews",
       selectedModel: "gemini-3.1-flash-lite",
       stats: {
@@ -62,6 +63,7 @@ const apiStatusBadge = document.getElementById("api-status-badge");
 const activeModelName = document.getElementById("active-model-name");
 const openSettingsBtn = document.getElementById("open-settings-btn");
 const themeToggleBtn = document.getElementById("popup-theme-toggle");
+const soundToggleBtn = document.getElementById("popup-sound-toggle");
 
 // Dashboard UI elements
 const statRequests = document.getElementById("stat-requests");
@@ -76,6 +78,115 @@ const tokenRatioInput = document.getElementById("token-ratio-input");
 const tokenRatioOutput = document.getElementById("token-ratio-output");
 const chartBarsContainer = document.getElementById("chart-bars-container");
 
+// Web Audio API Sound Synthesiser
+let audioCtx = null;
+
+function initAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  if (audioCtx.state === "suspended") {
+    audioCtx.resume();
+  }
+}
+
+async function playSound(type) {
+  const settings = await chrome.storage.local.get("muted");
+  if (settings.muted) return;
+  
+  try {
+    initAudioContext();
+    const now = audioCtx.currentTime;
+    
+    switch (type) {
+      case "click": {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+        
+        gain.gain.setValueAtTime(0.04, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.05);
+        break;
+      }
+      
+      case "success": {
+        const osc1 = audioCtx.createOscillator();
+        const osc2 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        const gain2 = audioCtx.createGain();
+        
+        osc1.type = "triangle";
+        osc1.frequency.setValueAtTime(523.25, now);
+        gain1.gain.setValueAtTime(0.02, now);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.09);
+        
+        osc2.type = "triangle";
+        osc2.frequency.setValueAtTime(659.25, now + 0.07);
+        gain2.gain.setValueAtTime(0.02, now + 0.07);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.07);
+        osc2.stop(now + 0.23);
+        break;
+      }
+      
+      case "toggle-on": {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(260, now);
+        osc.frequency.exponentialRampToValueAtTime(440, now + 0.1);
+        
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.11);
+        break;
+      }
+      
+      case "toggle-off": {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.exponentialRampToValueAtTime(260, now + 0.1);
+        
+        gain.gain.setValueAtTime(0.03, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+        
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        
+        osc.start(now);
+        osc.stop(now + 0.11);
+        break;
+      }
+    }
+  } catch (e) {
+    console.warn("Audio Context blocked or unsupported:", e);
+  }
+}
+
 // Load settings on startup
 document.addEventListener("DOMContentLoaded", async () => {
   await initializePopup();
@@ -85,21 +196,40 @@ document.addEventListener("DOMContentLoaded", async () => {
 extensionToggle.addEventListener("change", async (e) => {
   const isEnabled = e.target.checked;
   await chrome.storage.local.set({ enabled: isEnabled });
+  playSound(isEnabled ? "toggle-on" : "toggle-off");
 });
 
 // Theme Toggle handler
 themeToggleBtn.addEventListener("click", async () => {
   const isDark = document.documentElement.classList.toggle("dark");
   await chrome.storage.local.set({ theme: isDark ? "dark" : "light" });
+  playSound(isDark ? "toggle-on" : "toggle-off");
+});
+
+// Sound Toggle handler
+soundToggleBtn.addEventListener("click", async () => {
+  const isMuted = document.documentElement.classList.toggle("muted");
+  await chrome.storage.local.set({ muted: isMuted });
+  if (!isMuted) {
+    initAudioContext();
+    playSound("click");
+  } else {
+    // Play a brief sweep down before muting
+    playSound("toggle-off");
+  }
 });
 
 // Open settings page
 openSettingsBtn.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
+  playSound("click");
+  setTimeout(() => {
+    chrome.runtime.openOptionsPage();
+  }, 100);
 });
 
 // Clear statistics handler
 clearStatsBtn.addEventListener("click", async () => {
+  playSound("click");
   if (confirm("Are you sure you want to reset your usage statistics?")) {
     const emptyStats = {
       totalRequests: 0,
@@ -117,6 +247,7 @@ clearStatsBtn.addEventListener("click", async () => {
     };
     await chrome.storage.local.set({ stats: emptyStats });
     displayStats(emptyStats);
+    playSound("success");
   }
 });
 
@@ -124,7 +255,7 @@ clearStatsBtn.addEventListener("click", async () => {
  * Initialize popup state
  */
 async function initializePopup() {
-  const settings = await chrome.storage.local.get(["apiKey", "selectedModel", "enabled", "theme", "stats"]);
+  const settings = await chrome.storage.local.get(["apiKey", "selectedModel", "enabled", "theme", "stats", "muted"]);
 
   // Set Enable/Disable switch
   extensionToggle.checked = settings.enabled !== false; // Default to true if undefined
@@ -140,6 +271,14 @@ async function initializePopup() {
     document.documentElement.classList.add("dark");
   } else {
     document.documentElement.classList.remove("dark");
+  }
+
+  // Set Sound status class
+  const isMuted = settings.muted === true;
+  if (isMuted) {
+    document.documentElement.classList.add("muted");
+  } else {
+    document.documentElement.classList.remove("muted");
   }
 
   // Set Model text

@@ -1,4 +1,4 @@
-// content.js - Injected writing assistant script
+// content.js - Injected writing assistant script with upgraded themes and sounds
 
 (function() {
   // Prevent duplicate injection
@@ -33,6 +33,89 @@
   // Prompt templates cache
   let prompts = {};
 
+  // Audio Context for sound synthesis
+  let audioCtx = null;
+
+  function initAudioContext() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  /**
+   * Sound engine for playing UI feedback effects
+   */
+  async function playSound(type) {
+    const settings = await chrome.storage.local.get("muted");
+    if (settings.muted) return;
+
+    try {
+      initAudioContext();
+      const now = audioCtx.currentTime;
+      
+      switch (type) {
+        case "click": {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.exponentialRampToValueAtTime(120, now + 0.04);
+          gain.gain.setValueAtTime(0.04, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.04);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+          break;
+        }
+        case "success": {
+          const osc1 = audioCtx.createOscillator();
+          const osc2 = audioCtx.createOscillator();
+          const gain1 = audioCtx.createGain();
+          const gain2 = audioCtx.createGain();
+          
+          osc1.type = "triangle";
+          osc1.frequency.setValueAtTime(523.25, now);
+          gain1.gain.setValueAtTime(0.02, now);
+          gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc1.connect(gain1);
+          gain1.connect(audioCtx.destination);
+          osc1.start(now);
+          osc1.stop(now + 0.09);
+          
+          osc2.type = "triangle";
+          osc2.frequency.setValueAtTime(659.25, now + 0.07);
+          gain2.gain.setValueAtTime(0.02, now + 0.07);
+          gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start(now + 0.07);
+          osc2.stop(now + 0.23);
+          break;
+        }
+        case "error": {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(150, now);
+          osc.frequency.linearRampToValueAtTime(100, now + 0.15);
+          gain.gain.setValueAtTime(0.02, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.16);
+          break;
+        }
+      }
+    } catch (e) {
+      console.warn("Audio Context sound error:", e);
+    }
+  }
+
   // Initialize
   init();
 
@@ -47,7 +130,7 @@
     isEnabled = settings.enabled !== false;
     currentTheme = settings.theme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
     
-    // Cache prompts with robust defaults if not set or if legacy prompts are stored
+    // Cache prompts with robust defaults
     prompts = {
       rewrite: (settings.prompt_rewrite && settings.prompt_rewrite.includes("CRITICAL:")) ? settings.prompt_rewrite : DEFAULT_PROMPTS.rewrite,
       review: (settings.prompt_review && settings.prompt_review.includes("CRITICAL:")) ? settings.prompt_review : DEFAULT_PROMPTS.review,
@@ -80,7 +163,7 @@
           createShadowContainer();
         }
       }
-      if (changes.theme && shadowRoot) {
+      if (changes.theme && container) {
         currentTheme = changes.theme.newValue;
         updateThemeClass();
       }
@@ -94,12 +177,11 @@
   }
 
   function updateThemeClass() {
-    const rootEl = shadowRoot.querySelector(".tb-root");
-    if (rootEl) {
+    if (container) {
       if (currentTheme === "dark") {
-        rootEl.classList.add("dark");
+        container.classList.add("dark");
       } else {
-        rootEl.classList.remove("dark");
+        container.classList.remove("dark");
       }
     }
   }
@@ -121,8 +203,8 @@
     // Inject styles and HTML templates into Shadow DOM
     shadowRoot.innerHTML = `
       <style>
-        /* Shadow DOM Design System - Shadcn Zinc theme */
-        .tb-root {
+        /* Host scoping for theme custom properties */
+        :host {
           --background: 0 0% 100%;
           --foreground: 240 10% 3.9%;
           --card: 0 0% 100%;
@@ -136,12 +218,9 @@
           --border: 240 5.9% 90%;
           --radius: 8px;
           --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-          
-          font-family: var(--font-sans);
-          color: hsl(var(--foreground));
         }
 
-        .tb-root.dark {
+        :host(.dark) {
           --background: 240 10% 3.9%;
           --foreground: 0 0% 98%;
           --card: 240 10% 3.9%;
@@ -153,6 +232,11 @@
           --accent: 240 3.7% 15.9%;
           --accent-foreground: 0 0% 98%;
           --border: 240 3.7% 15.9%;
+        }
+
+        .tb-root {
+          font-family: var(--font-sans);
+          color: hsl(var(--foreground));
         }
 
         /* Floating elements */
@@ -312,6 +396,7 @@
           overflow-y: auto;
           white-space: pre-wrap;
           outline: none;
+          color: hsl(var(--foreground));
         }
 
         /* Button configurations */
@@ -426,14 +511,17 @@
 
     shadowRootEl.getElementById("tb-trigger-btn").addEventListener("click", (e) => {
       e.stopPropagation();
+      playSound("click");
       showMainCard();
     });
 
     shadowRootEl.getElementById("tb-close-btn").addEventListener("click", () => {
+      playSound("click");
       hideAll();
     });
 
     shadowRootEl.getElementById("tb-back-btn").addEventListener("click", () => {
+      playSound("click");
       showPanel("options");
     });
 
@@ -444,6 +532,7 @@
     const optButtons = shadowRootEl.querySelectorAll(".tb-opt-btn");
     optButtons.forEach(btn => {
       btn.addEventListener("click", () => {
+        playSound("click");
         const action = btn.getAttribute("data-action");
         executeAction(action);
       });
@@ -499,9 +588,6 @@
         
         // Render trigger button close to selection
         positionTrigger();
-      } else if (text.length === 0) {
-        // Ignore if clicking on widget or menu
-        // (will be caught in click outside handler)
       }
     }, 10);
   }
@@ -633,13 +719,16 @@
       },
       (response) => {
         if (chrome.runtime.lastError) {
+          playSound("error");
           renderResult(`Runtime Error: ${chrome.runtime.lastError.message}`, false);
           return;
         }
 
         if (response && response.success) {
+          playSound("success");
           renderResult(response.text, true);
         } else {
+          playSound("error");
           renderResult(`API Error: ${response?.error || "Unknown completion error."}`, false);
         }
       }
@@ -680,6 +769,7 @@
     
     try {
       await navigator.clipboard.writeText(text);
+      playSound("success");
       const copyBtn = shadowRoot.getElementById("tb-copy-btn");
       copyBtn.textContent = "Copied!";
       setTimeout(() => {
@@ -709,6 +799,7 @@
         // Reset selection range to the new text
         activeElement.focus();
         activeElement.setSelectionRange(inputStart, inputStart + newText.length);
+        playSound("success");
       } catch (e) {
         console.error("Failed input replacement fallback:", e);
       }
@@ -731,6 +822,7 @@
         
         // Update active selection range reference
         activeSelectionRange = newRange.cloneRange();
+        playSound("success");
       } catch (e) {
         console.error("Failed Selection replacement fallback:", e);
       }
