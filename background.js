@@ -5,8 +5,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "generateText") {
     handleGenerateText(request)
       .then(result => sendResponse({ success: true, text: result }))
-      .catch(error => sendResponse({ success: false, error: error.message }));
+      .catch(error => {
+        sendResponse({ 
+          success: false, 
+          error: error.message,
+          status: error.status || null
+        });
+      });
     return true; // Keep message channel open for asynchronous sendResponse
+  } else if (request.action === "openOptionsPage") {
+    chrome.runtime.openOptionsPage();
+    sendResponse({ success: true });
+    return;
   }
 });
 
@@ -64,7 +74,9 @@ async function handleGenerateText(request) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       const errorMessage = errorData.error?.message || `HTTP error! status: ${response.status}`;
-      throw new Error(errorMessage);
+      const err = new Error(errorMessage);
+      err.status = response.status;
+      throw err;
     }
 
     const data = await response.json();

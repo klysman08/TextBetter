@@ -14,6 +14,7 @@
   let inputEnd = 0;
   let currentTheme = "dark";
   let isEnabled = true;
+  let lastAction = "";
 
   // Shadow DOM container
   let container = null;
@@ -363,12 +364,76 @@
           stroke-linejoin: round;
         }
 
-        /* Loading Skeleton */
+        /* Loading Screen styles */
         .tb-loading-box {
-          padding: 16px;
+          padding: 24px 16px;
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          text-align: center;
+        }
+
+        .tb-loading-spinner-container {
+          position: relative;
+          width: 56px;
+          height: 56px;
+          margin-bottom: 4px;
+        }
+
+        .tb-loading-ring {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          border: 3px solid transparent;
+          border-top: 3px solid hsl(var(--primary));
+          border-left: 3px solid hsl(var(--primary) / 0.3);
+          border-radius: 50%;
+          animation: tb-spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+        }
+
+        .tb-loading-ring-inner {
+          position: absolute;
+          top: 4px;
+          left: 4px;
+          right: 4px;
+          bottom: 4px;
+          border: 2px solid transparent;
+          border-bottom: 2px solid hsl(var(--muted-foreground) / 0.5);
+          border-right: 2px solid hsl(var(--muted-foreground) / 0.1);
+          border-radius: 50%;
+          animation: tb-spin-reverse 1.8s linear infinite;
+        }
+
+        .tb-loading-stars {
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          color: hsl(var(--primary));
+          animation: tb-pulse-star 1.5s ease-in-out infinite;
+        }
+
+        .tb-loading-title {
+          font-weight: 600;
+          font-size: 13px;
+          color: hsl(var(--foreground));
+          margin: 0;
+        }
+
+        .tb-loading-subtitle {
+          font-size: 11px;
+          color: hsl(var(--muted-foreground));
+          margin-top: -6px;
+          margin-bottom: 8px;
+        }
+
+        .tb-loading-skeleton-lines {
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
         }
 
         .tb-skeleton {
@@ -382,6 +447,66 @@
         @keyframes loading-pulse {
           from { background-position: 200% 0; }
           to { background-position: -200% 0; }
+        }
+
+        @keyframes tb-spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+
+        @keyframes tb-spin-reverse {
+          0% { transform: rotate(360deg); }
+          100% { transform: rotate(0deg); }
+        }
+
+        @keyframes tb-pulse-star {
+          0%, 100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0.7; }
+          50% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; }
+        }
+
+        /* Error Screen styles */
+        .tb-error-box {
+          padding: 20px 16px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          gap: 12px;
+          text-align: center;
+        }
+
+        .tb-error-icon-container {
+          color: hsl(0 84.2% 60.2%);
+          background-color: hsl(0 84.2% 60.2% / 0.1);
+          padding: 12px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          margin-bottom: 4px;
+        }
+
+        .tb-error-title {
+          font-weight: 600;
+          font-size: 14px;
+          color: hsl(0 84.2% 60.2%);
+          margin: 0;
+        }
+
+        .tb-error-message {
+          font-size: 12px;
+          line-height: 1.5;
+          color: hsl(var(--muted-foreground));
+          background-color: hsl(var(--muted));
+          border: 1px solid hsl(var(--border));
+          border-radius: calc(var(--radius) - 2px);
+          padding: 10px;
+          max-height: 100px;
+          overflow-y: auto;
+          width: 100%;
+          box-sizing: border-box;
+          text-align: left;
+          word-break: break-word;
         }
 
         /* Results Display Panel */
@@ -496,11 +621,43 @@
             </button>
           </div>
 
-          <!-- Loader Skeleton -->
+          <!-- Loader Panel -->
           <div id="tb-panel-loading" class="tb-loading-box hidden">
-            <div class="tb-skeleton" style="width: 100%;"></div>
-            <div class="tb-skeleton" style="width: 85%;"></div>
-            <div class="tb-skeleton" style="width: 90%;"></div>
+            <div class="tb-loading-spinner-container">
+              <div class="tb-loading-ring">
+                <div class="tb-loading-ring-inner"></div>
+              </div>
+              <div class="tb-loading-stars">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
+                </svg>
+              </div>
+            </div>
+            <div class="tb-loading-title">Refining with Gemini AI...</div>
+            <div class="tb-loading-subtitle">This will take a moment</div>
+            <div class="tb-loading-skeleton-lines">
+              <div class="tb-skeleton" style="width: 100%;"></div>
+              <div class="tb-skeleton" style="width: 85%;"></div>
+              <div class="tb-skeleton" style="width: 60%;"></div>
+            </div>
+          </div>
+
+          <!-- Error Panel -->
+          <div id="tb-panel-error" class="tb-error-box hidden">
+            <div class="tb-error-icon-container">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/>
+                <line x1="12" y1="9" x2="12" y2="13"/>
+                <line x1="12" y1="17" x2="12.01" y2="17"/>
+              </svg>
+            </div>
+            <div class="tb-error-title" id="tb-error-title-text">API Error</div>
+            <div class="tb-error-message" id="tb-error-message-text">An unexpected error occurred while communicating with the Gemini API. Please try again.</div>
+            <div class="tb-btn-row" style="width: 100%;">
+              <button class="tb-btn tb-btn-primary" id="tb-retry-btn" type="button">Retry</button>
+              <button class="tb-btn tb-btn-outline" id="tb-settings-btn" type="button">Settings</button>
+              <button class="tb-btn tb-btn-outline" id="tb-error-back-btn" type="button" style="flex: 0.5;">Back</button>
+            </div>
           </div>
 
           <!-- Results Panel -->
@@ -542,6 +699,24 @@
 
     shadowRootEl.getElementById("tb-copy-btn").addEventListener("click", handleCopy);
     shadowRootEl.getElementById("tb-insert-btn").addEventListener("click", handleInsert);
+
+    // Bind error panel buttons
+    shadowRootEl.getElementById("tb-retry-btn").addEventListener("click", () => {
+      playSound("click");
+      if (lastAction) {
+        executeAction(lastAction);
+      }
+    });
+
+    shadowRootEl.getElementById("tb-settings-btn").addEventListener("click", () => {
+      playSound("click");
+      chrome.runtime.sendMessage({ action: "openOptionsPage" });
+    });
+
+    shadowRootEl.getElementById("tb-error-back-btn").addEventListener("click", () => {
+      playSound("click");
+      showPanel("options");
+    });
 
     // Bind options buttons
     const optButtons = shadowRootEl.querySelectorAll(".tb-opt-btn");
@@ -704,14 +879,17 @@
     const optPanel = shadowRoot.getElementById("tb-panel-options");
     const loadPanel = shadowRoot.getElementById("tb-panel-loading");
     const resPanel = shadowRoot.getElementById("tb-panel-result");
+    const errPanel = shadowRoot.getElementById("tb-panel-error");
 
     optPanel.classList.add("hidden");
     loadPanel.classList.add("hidden");
     resPanel.classList.add("hidden");
+    errPanel.classList.add("hidden");
 
     if (panelName === "options") optPanel.classList.remove("hidden");
     if (panelName === "loading") loadPanel.classList.remove("hidden");
     if (panelName === "result") resPanel.classList.remove("hidden");
+    if (panelName === "error") errPanel.classList.remove("hidden");
   }
 
   /**
@@ -719,6 +897,7 @@
    */
   async function executeAction(action) {
     if (!activeSelectionText) return;
+    lastAction = action;
 
     showPanel("loading");
 
@@ -735,7 +914,7 @@
       (response) => {
         if (chrome.runtime.lastError) {
           playSound("error");
-          renderResult(`Runtime Error: ${chrome.runtime.lastError.message}`, false);
+          renderError(`Runtime Error: ${chrome.runtime.lastError.message}`);
           return;
         }
 
@@ -744,10 +923,45 @@
           renderResult(response.text, true);
         } else {
           playSound("error");
-          renderResult(`API Error: ${response?.error || "Unknown completion error."}`, false);
+          renderError(response?.error || "Unknown completion error.", response?.status);
         }
       }
     );
+  }
+
+  /**
+   * Render error screen with custom contextual warnings
+   */
+  function renderError(errorMessage, errorCode = null) {
+    if (!shadowRoot) return;
+
+    const errorTitleText = shadowRoot.getElementById("tb-error-title-text");
+    const errorMessageText = shadowRoot.getElementById("tb-error-message-text");
+
+    let title = "API Error";
+    let explanation = errorMessage;
+
+    if (errorCode) {
+      title = `API Error (${errorCode})`;
+      if (errorCode === 400 || errorCode === 403) {
+        title = "API Configuration Issue";
+        explanation = "The request was rejected by Gemini. This usually means the API key is invalid, permissions are restricted, or the prompt/model settings are incorrect.\n\nDetails: " + errorMessage;
+      } else if (errorCode === 429) {
+        title = "Rate Limit Exceeded";
+        explanation = "You have exceeded your Gemini API request quota. Please wait a moment before trying again or check your billing status.\n\nDetails: " + errorMessage;
+      } else if (errorCode >= 500) {
+        title = `Gemini Server Error (${errorCode})`;
+        explanation = "Google's Gemini servers returned an error. This is a temporary server issue. Please try retrying your request.\n\nDetails: " + errorMessage;
+      }
+    } else if (errorMessage.toLowerCase().includes("api key is missing")) {
+      title = "Setup Required";
+      explanation = "No API Key was found. Please open settings and input a valid Google Gemini API key to use TextBetter.";
+    }
+
+    errorTitleText.textContent = title;
+    errorMessageText.textContent = explanation;
+
+    showPanel("error");
   }
 
   /**

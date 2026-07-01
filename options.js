@@ -253,7 +253,7 @@ testApiBtn.addEventListener("click", async () => {
         setTestResult(true, `Success! Response: "${response.text.trim()}"`);
       } else {
         playSound("error");
-        setTestResult(false, response?.error || "Failed to get response");
+        setTestResult(false, response?.error || "Failed to get response", response?.status);
       }
     }
   );
@@ -349,7 +349,7 @@ async function setupTheme() {
 /**
  * Display test results
  */
-function setTestResult(success, message) {
+function setTestResult(success, message, status = null) {
   testStatus.classList.remove("hidden");
   if (success) {
     testStatus.className = "text-xs font-medium text-center text-success";
@@ -357,7 +357,11 @@ function setTestResult(success, message) {
     showToast("Gemini API connection test passed!", "success");
   } else {
     testStatus.className = "text-xs font-medium text-center text-error";
-    testStatus.textContent = message;
+    let text = message;
+    if (status) {
+      text = `[Error ${status}] ${message}`;
+    }
+    testStatus.textContent = text;
     showToast("Gemini API test failed. Check settings.", "error");
   }
 }
