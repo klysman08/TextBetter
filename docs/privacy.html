@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- SEO Meta Tags -->
+  <title>Privacy Policy — TextBetter Writing Assistant</title>
+  <meta name="description" content="Privacy Policy for TextBetter, a premium, privacy-focused Gemini-powered Chrome extension designed with Shadcn Zinc aesthetics.">
+  <meta name="keywords" content="TextBetter, privacy policy, Chrome extension, Gemini AI, privacy-focused">
+  <meta name="author" content="TextBetter">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Privacy Policy — TextBetter Writing Assistant">
+  <meta property="og:description" content="TextBetter is designed from the ground up to protect your privacy. Read our detailed privacy policy.">
+  <meta property="og:type" content="website">
+  
+  <!-- Google Fonts (Inter) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="16x16" href="icon16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="icon32.png">
+  <link rel="shortcut icon" href="icon.png">
+
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body class="min-h-screen antialiased">
+
+  <!-- Sticky Header -->
+  <header class="sticky-header">
+    <div class="header-container container">
+      <a href="index.html" class="logo-wrapper">
+        <svg class="logo-spark" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
+        </svg>
+        <span class="logo-text">TextBetter</span>
+      </a>
+      
+      <nav class="nav-links">
+        <a href="index.html#features" class="nav-link">Features</a>
+        <a href="index.html#setup" class="nav-link">Setup</a>
+        <a href="index.html#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <!-- Sound Toggle -->
+        <button id="sound-toggle" class="btn-icon" aria-label="Toggle Sound Effects" title="Toggle UI Sounds">
+          <!-- Volume High Icon -->
+          <svg class="sound-on-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <!-- Volume Mute Icon -->
+          <svg class="sound-off-icon hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+        </button>
+
+        <!-- Theme Toggle -->
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle Light/Dark Theme" title="Toggle Theme">
+          <!-- Sun Icon -->
+          <svg class="sun-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon -->
+          <svg class="moon-icon hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <!-- Primary CTA -->
+        <a href="index.html#setup" class="btn btn-primary btn-sm">Get Started</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="policy-page container">
+    <div class="policy-body">
+      <!-- Section Header -->
+      <div class="policy-header">
+        <h1 class="policy-title">Privacy Policy</h1>
+        <p class="policy-subtitle">Last updated: July 2, 2026</p>
+      </div>
+
+      <!-- Highlight Callout Box -->
+      <div class="policy-callout">
+        <div class="policy-callout-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </div>
+        <div class="policy-callout-content">
+          <p><strong>Privacy First:</strong> TextBetter does not own any database or middleman servers. Your API key and configuration settings are stored 100% locally in your own browser's secure sandbox. We do not track, collect, or log any text you write or highlight.</p>
+        </div>
+      </div>
+
+      <!-- Policy Content -->
+      <div class="policy-section">
+        <h2>1. Overview</h2>
+        <p>
+          TextBetter ("we", "our", or "us") is a premium AI writing assistant Chrome extension designed to help you write better directly inside your browser. We value your privacy above all else. This Privacy Policy outlines what information is used, how it is stored, and who receives it.
+        </p>
+      </div>
+
+      <div class="policy-section">
+        <h2>2. Data Collection and Transmission</h2>
+        <p>
+          TextBetter operates under a strict <strong>serverless and local-first architecture</strong>:
+        </p>
+        <ul>
+          <li><strong>No Personal Data Collection:</strong> We do not collect, request, or store your name, email address, password, browsing history, or payment information.</li>
+          <li><strong>No Writing Logs:</strong> Text you highlight or submit for AI correction is processed immediately and is never logged, saved, or cataloged by our extension.</li>
+          <li><strong>No Third-Party Analytics:</strong> The extension does not load third-party analytics trackers, cookies, or telemetry software.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>3. Third-Party Services (Google Gemini API)</h2>
+        <p>
+          To perform writing improvements, TextBetter interfaces directly with the <strong>Google Gemini API</strong>:
+        </p>
+        <ul>
+          <li><strong>Direct Request Flow:</strong> All requests for writing corrections are transmitted directly from your local browser client to Google's official Gemini API endpoints (<code>https://generativelanguage.googleapis.com</code>).</li>
+          <li><strong>No Intermediaries:</strong> No intermediary servers, databases, or proxy services receive your text or API keys.</li>
+          <li><strong>Google's Privacy Terms:</strong> Since requests are sent directly to Google AI Studio, their usage is governed by the Google API Client Terms and Google Privacy Policy. You can learn more about how Google processes API data at Google's developers documentation site.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>4. Chrome Extension Permissions Explained</h2>
+        <p>
+          To function correctly, the extension requests the following permissions from your browser:
+        </p>
+        <ul>
+          <li><strong><code>storage</code>:</strong> Used to save settings locally (your API key, model preference, active styling options, and custom prompts) in the browser's sandbox via <code>chrome.storage.local</code>.</li>
+          <li><strong>Host Permission (<code>https://generativelanguage.googleapis.com/*</code>):</strong> Required to send network requests directly from the extension to Google's Gemini API servers.</li>
+          <li><strong>Content Script Matches (<code>&lt;all_urls&gt;</code>):</strong> Necessary to display the overlay icon/menu next to highlighted text on the web pages you actively read and write on. Your page content is read solely for the purpose of selecting the highlighted text and injecting the inline writing assistant UI.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>5. Key and Configuration Storage</h2>
+        <p>
+          Your Gemini API key is stored securely in your browser's local sandbox storage using <code>chrome.storage.local</code>. It is never transmitted anywhere other than Google's secure API endpoint. For maximum security, we recommend that you generate a dedicated API key with restricted limits in your Google AI Studio dashboard.
+        </p>
+      </div>
+
+      <div class="policy-section">
+        <h2>6. Changes to this Policy</h2>
+        <p>
+          We may update our Privacy Policy from time to time. Any changes will be posted directly to this page and will take effect immediately upon updating.
+        </p>
+      </div>
+
+      <div class="policy-section">
+        <h2>7. Contact and Support</h2>
+        <p>
+          If you have questions, feedback, or concerns regarding your privacy while using TextBetter, you can review our open-source codebase or open an issue on our official <a href="https://github.com/klysman08/TextBetter" target="_blank" class="link-underlined">GitHub Repository</a>.
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer-section">
+    <div class="container">
+      <div class="footer-bottom">
+        <p>&copy; 2026 TextBetter. Licensed under the MIT License.</p>
+        <p class="footer-credits">Designed with Shadcn Zinc styling. No tracking cookies. No external analytics servers.</p>
+        <div class="footer-links">
+          <a href="index.html" class="link-underlined">Home</a>
+          <span class="bullet">&bull;</span>
+          <a href="https://github.com/klysman08/TextBetter" target="_blank" class="link-underlined">GitHub Repository</a>
+          <span class="bullet">&bull;</span>
+          <a href="https://aistudio.google.com" target="_blank" class="link-underlined">Google AI Studio</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Script logic -->
+  <script src="index.js"></script>
+</body>
+</html>
