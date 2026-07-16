@@ -16,6 +16,11 @@
   let isEnabled = true;
   let lastAction = "";
 
+  // Behavior options
+  let autoOpen = true;
+  let iconPosition = "above";
+  let hotkey = "";
+
   // Shadow DOM container
   let container = null;
   let shadowRoot = null;
@@ -124,12 +129,16 @@
     // Load state and prompts
     const settings = await chrome.storage.local.get([
       "enabled", "theme", "selectedModel",
+      "autoOpen", "iconPosition", "hotkey",
       "prompt_rewrite", "prompt_review", "prompt_professional",
       "prompt_appealing", "prompt_emojis", "prompt_detail", "prompt_shorten"
     ]);
 
     isEnabled = settings.enabled !== false;
     currentTheme = settings.theme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+    autoOpen = settings.autoOpen !== false;
+    iconPosition = settings.iconPosition || "above";
+    hotkey = settings.hotkey || "";
     
     // Cache prompts with robust defaults
     prompts = {
@@ -150,6 +159,7 @@
     // Listen for window-level mouse/key events to capture text selections
     document.addEventListener("mouseup", handleSelectionChange);
     document.addEventListener("keyup", handleSelectionChange);
+    document.addEventListener("keydown", handleHotkeyPress);
     
     // Listen for clicks outside to dismiss floating menus
     document.addEventListener("mousedown", handleDocumentClick);
@@ -167,6 +177,15 @@
       if (changes.theme && container) {
         currentTheme = changes.theme.newValue;
         updateThemeClass();
+      }
+      if (changes.autoOpen) {
+        autoOpen = changes.autoOpen.newValue !== false;
+      }
+      if (changes.iconPosition) {
+        iconPosition = changes.iconPosition.newValue || "above";
+      }
+      if (changes.hotkey) {
+        hotkey = changes.hotkey.newValue || "";
       }
       // Update prompts if modified
       Object.keys(prompts).forEach(key => {
@@ -679,6 +698,12 @@
     // Prevent selections on page from resetting when clicking inside the Shadow DOM UI
     shadowRootEl.querySelector(".tb-root").addEventListener("mousedown", (e) => {
       e.preventDefault();
+      e.stopPropagation();
+    });
+
+    // Prevent mouseup from bubbling up to document and triggering handleSelectionChange
+    shadowRootEl.querySelector(".tb-root").addEventListener("mouseup", (e) => {
+      e.stopPropagation();
     });
 
     shadowRootEl.getElementById("tb-trigger-btn").addEventListener("click", (e) => {
@@ -744,6 +769,14 @@
   function handleSelectionChange() {
     if (!isEnabled) return;
     
+    // If the main card is already open, do not disrupt it or close it
+    if (shadowRoot) {
+      const mainCard = shadowRoot.getElementById("tb-main-card");
+      if (mainCard && !mainCard.classList.contains("hidden")) {
+        return;
+      }
+    }
+    
     // Delay selection grab slightly to let selection finish drawing
     setTimeout(() => {
       const activeEl = document.activeElement;
@@ -772,24 +805,54 @@
         }
       }
 
-      if (text.length > 0 && text !== activeSelectionText) {
+      if (text.length > 0) {
         activeSelectionText = text;
         isInputSelection = isInput;
         
-        // Render trigger button close to selection
-        positionTrigger();
+        // Render trigger button close to selection only if autoOpen is enabled
+        if (autoOpen) {
+          positionTrigger();
+        }
       }
     }, 10);
   }
 
   /**
-   * Hide menus when clicking outside
+   * Monitor user hotkey combination for selected text
    */
+  function handleHotkeyPress(e) {
+    if (!isEnabled || !hotkey) return;
+
+    const parts = [];
+    if (e.ctrlKey) parts.push("Ctrl");
+    if (e.altKey) parts.push("Alt");
+    if (e.shiftKey) parts.push("Shift");
+    if (e.metaKey) parts.push("Meta");
+
+    if (e.key && e.key !== "Control" && e.key !== "Alt" && e.key !== "Shift" && e.key !== "Meta") {
+      let keyName = e.key;
+      if (keyName === " ") keyName = "Space";
+      else if (keyName.length === 1) keyName = keyName.toUpperCase();
+      parts.push(keyName);
+    }
+
+    const pressed = parts.join("+");
+    if (pressed === hotkey) {
+      if (activeSelectionText.length > 0) {
+        e.preventDefault();
+        e.stopPropagation();
+        playSound("click");
+        showMainCard();
+      }
+    }
+  }
+
   function handleDocumentClick(e) {
     if (!container) return;
 
     // Check if click target is outside the Shadow DOM container
-    if (e.target !== container && !container.contains(e.target)) {
+    const path = e.composedPath ? e.composedPath() : [];
+    if (!path.includes(container)) {
       hideAll();
     }
   }
@@ -823,8 +886,13 @@
     if (!rect) return;
 
     // Calculate vertical/horizontal coordinates
-    // Float slightly above selection
-    const top = rect.top - 36 + window.scrollY;
+    // Float slightly above or below selection depending on settings
+    let top;
+    if (iconPosition === "below") {
+      top = rect.bottom + 8 + window.scrollY;
+    } else {
+      top = rect.top - 36 + window.scrollY;
+    }
     const left = rect.left + (rect.width / 2) - 14 + window.scrollX;
 
     // Constrain position within viewport
@@ -854,8 +922,13 @@
 
     if (!rect) return;
 
-    // Position main card centered above the selection
-    const top = rect.top - 180 + window.scrollY; // Estimate height
+    // Position main card centered above or below the selection depending on settings
+    let top;
+    if (iconPosition === "below") {
+      top = rect.bottom + 8 + window.scrollY;
+    } else {
+      top = rect.top - 180 + window.scrollY; // Estimate height
+    }
     const left = rect.left + (rect.width / 2) - 160 + window.scrollX;
 
     // Safety checks

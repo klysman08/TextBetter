@@ -62,6 +62,11 @@ const resetPromptsBtn = document.getElementById("reset-prompts-btn");
 const themeToggleBtn = document.getElementById("theme-toggle");
 const toastContainer = document.getElementById("toast-container");
 
+// Behavior Configuration Elements
+const autoOpenToggle = document.getElementById("auto-open-toggle");
+const iconPositionSelect = document.getElementById("icon-position-select");
+const hotkeyInput = document.getElementById("hotkey-input");
+
 // Web Audio API Sound Synthesiser
 let audioCtx = null;
 
@@ -184,6 +189,74 @@ toggleKeyVisibilityBtn.addEventListener("click", () => {
   toggleKeyVisibilityBtn.textContent = isPassword ? "Hide" : "Show";
 });
 
+// Shortcut recording logic
+let recordingHotkey = false;
+
+hotkeyInput.addEventListener("focus", () => {
+  playSound("click");
+  hotkeyInput.value = "Press keys to record...";
+  hotkeyInput.style.borderColor = "hsl(var(--ring))";
+  recordingHotkey = true;
+});
+
+hotkeyInput.addEventListener("blur", async () => {
+  recordingHotkey = false;
+  hotkeyInput.style.borderColor = "";
+  if (hotkeyInput.value === "Press keys to record...") {
+    const res = await chrome.storage.local.get("hotkey");
+    hotkeyInput.value = res.hotkey || "";
+  } else {
+    await chrome.storage.local.set({ hotkey: hotkeyInput.value });
+  }
+});
+
+hotkeyInput.addEventListener("keydown", (e) => {
+  if (!recordingHotkey) return;
+
+  // Prevent browser action shortcuts
+  e.preventDefault();
+  e.stopPropagation();
+
+  // Esc or Backspace to clear shortcut
+  if (e.key === "Escape" || e.key === "Backspace") {
+    hotkeyInput.value = "";
+    hotkeyInput.blur();
+    playSound("click");
+    return;
+  }
+
+  const parts = [];
+  if (e.ctrlKey) parts.push("Ctrl");
+  if (e.altKey) parts.push("Alt");
+  if (e.shiftKey) parts.push("Shift");
+  if (e.metaKey) parts.push("Meta");
+
+  if (e.key && e.key !== "Control" && e.key !== "Alt" && e.key !== "Shift" && e.key !== "Meta") {
+    let keyName = e.key;
+    if (keyName === " ") keyName = "Space";
+    else if (keyName.length === 1) keyName = keyName.toUpperCase();
+    parts.push(keyName);
+  }
+
+  if (parts.length > 0) {
+    hotkeyInput.value = parts.join("+");
+    hotkeyInput.blur();
+    playSound("success");
+  }
+});
+
+// Auto-save behavior configurations
+autoOpenToggle.addEventListener("change", async () => {
+  const enabled = autoOpenToggle.checked;
+  await chrome.storage.local.set({ autoOpen: enabled });
+  playSound(enabled ? "toggle-on" : "toggle-off");
+});
+
+iconPositionSelect.addEventListener("change", async () => {
+  await chrome.storage.local.set({ iconPosition: iconPositionSelect.value });
+  playSound("click");
+});
+
 // Save settings handler
 saveSettingsBtn.addEventListener("click", async () => {
   await saveAllSettings();
@@ -270,7 +343,7 @@ themeToggleBtn.addEventListener("click", () => {
  * Load settings from storage
  */
 async function loadSettings() {
-  const keys = ["apiKey", "selectedModel", ...Object.keys(DEFAULT_PROMPTS).map(k => `prompt_${k}`)];
+  const keys = ["apiKey", "selectedModel", "autoOpen", "iconPosition", "hotkey", ...Object.keys(DEFAULT_PROMPTS).map(k => `prompt_${k}`)];
   const settings = await chrome.storage.local.get(keys);
 
   if (settings.apiKey) {
@@ -280,6 +353,11 @@ async function loadSettings() {
   if (settings.selectedModel) {
     modelSelect.value = settings.selectedModel;
   }
+
+  // Load behavior settings
+  autoOpenToggle.checked = settings.autoOpen !== false;
+  iconPositionSelect.value = settings.iconPosition || "above";
+  hotkeyInput.value = settings.hotkey || "";
 
   // Load prompts, automatically migrating older versions if needed
   let needsSave = false;
@@ -312,7 +390,10 @@ async function loadSettings() {
 async function saveAllSettings() {
   const settingsToSave = {
     apiKey: apiKeyInput.value.trim(),
-    selectedModel: modelSelect.value
+    selectedModel: modelSelect.value,
+    autoOpen: autoOpenToggle.checked,
+    iconPosition: iconPositionSelect.value,
+    hotkey: hotkeyInput.value.trim()
   };
 
   // Get prompts

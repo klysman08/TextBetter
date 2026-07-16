@@ -519,6 +519,14 @@
         </label>
       </div>
 
+      <div class="switch-container" style="margin-top: 0.75rem; border-top: 1px solid hsl(var(--border)); padding-top: 0.75rem; margin-bottom: 0;">
+        <span class="switch-label">Auto-open Button</span>
+        <label class="switch" aria-label="Auto-open floating button after selection">
+          <input type="checkbox" id="auto-open-toggle" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+
       <div class="status-row">
         <span>API Connection</span>
         <span id="api-status-badge" class="status-badge warn">
@@ -577,6 +585,24 @@
 
     <!-- Configure Actions button -->
     <button class="btn btn-primary" id="open-settings-btn" type="button">Configure prompts & settings</button>
+
+    <!-- Support & Links buttons -->
+    <div style="display: flex; gap: 0.5rem; margin-top: 0.75rem;">
+      <a href="https://github.com/klysman08/TextBetter" target="_blank" class="theme-toggle-btn" style="text-decoration: none; padding: 0.35rem 0.5rem; font-size: 0.7rem; flex: 1; justify-content: center;">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+          <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+        </svg>GitHub
+      </a>
+      <a href="https://donate.stripe.com/4gMdRa7XW6dt8Ph9KX9Ve01" target="_blank" class="theme-toggle-btn" style="text-decoration: none; padding: 0.35rem 0.5rem; font-size: 0.7rem; flex: 1; justify-content: center; background-color: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border-color: hsl(var(--primary));">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;">
+          <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+          <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+          <line x1="6" y1="1" x2="6" y2="4"></line>
+          <line x1="10" y1="1" x2="10" y2="4"></line>
+          <line x1="14" y1="1" x2="14" y2="4"></line>
+        </svg>Buy Coffee
+      </a>
+    </div>
   </main>
 
   <!-- Footer -->

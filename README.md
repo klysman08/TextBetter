@@ -24,8 +24,13 @@ Designed with **Shadcn Zinc** aesthetics, a native Web Audio synthesis engine, a
   - **Shorten**: Condense to direct, brief sentences.
 - 🎨 **Shadcn Zinc Design System**: A responsive UI with a custom dark/light theme matching Shadcn's modern palette.
 - 🔊 **Synthesized UI Sounds**: Responsive audio feedback (clicks, successes, error blips) synthesized in real-time using the **Web Audio API** (completely mutable in settings).
+- ⚙️ **Behavior Customization**:
+  - **Auto-open Toggle**: Toggle whether the floating trigger button automatically opens after text selection. Available in both options page and extension popup menus.
+  - **Icon Position**: Choose to render the floating trigger icon either `Above Selection` or `Below Selection` to match your browsing comfort.
+  - **Trigger Shortcut**: Record a custom keystroke combination (e.g., `Ctrl+Shift+K`) inside the settings page to open the writing assistant instantly for selected text.
 - 📊 **Usage Dashboard**: Real-time tracking of request history, input/output token counts, and most-used actions.
 - 📝 **Custom Prompts**: Edit the prompt instructions sent to Gemini for each of the 7 actions directly from the settings page.
+- ☕ **Support & GitHub**: Built-in Stripe donation ("Buy me a coffee") and official GitHub repository links on both settings and popup menus.
 
 ---
 

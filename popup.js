@@ -59,6 +59,7 @@ if (typeof chrome === "undefined" || !chrome.storage) {
 
 // Element Selectors
 const extensionToggle = document.getElementById("extension-toggle");
+const autoOpenToggle = document.getElementById("auto-open-toggle");
 const apiStatusBadge = document.getElementById("api-status-badge");
 const activeModelName = document.getElementById("active-model-name");
 const openSettingsBtn = document.getElementById("open-settings-btn");
@@ -199,6 +200,13 @@ extensionToggle.addEventListener("change", async (e) => {
   playSound(isEnabled ? "toggle-on" : "toggle-off");
 });
 
+// Auto-open Toggle handler
+autoOpenToggle.addEventListener("change", async (e) => {
+  const isAutoOpen = e.target.checked;
+  await chrome.storage.local.set({ autoOpen: isAutoOpen });
+  playSound(isAutoOpen ? "toggle-on" : "toggle-off");
+});
+
 // Theme Toggle handler
 themeToggleBtn.addEventListener("click", async () => {
   const isDark = document.documentElement.classList.toggle("dark");
@@ -255,10 +263,11 @@ clearStatsBtn.addEventListener("click", async () => {
  * Initialize popup state
  */
 async function initializePopup() {
-  const settings = await chrome.storage.local.get(["apiKey", "selectedModel", "enabled", "theme", "stats", "muted"]);
+  const settings = await chrome.storage.local.get(["apiKey", "selectedModel", "enabled", "theme", "stats", "muted", "autoOpen"]);
 
-  // Set Enable/Disable switch
+  // Set Enable/Disable switches
   extensionToggle.checked = settings.enabled !== false; // Default to true if undefined
+  autoOpenToggle.checked = settings.autoOpen !== false; // Default to true if undefined
 
   // Set Theme
   let theme = settings.theme;
