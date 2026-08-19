@@ -1,5 +1,22 @@
 // background.js - TextBetter Service Worker
 
+const MAX_HISTORY_ITEMS = 100;
+
+// Action labels for history recording
+const ACTION_LABELS = {
+  rewrite: "Rewrite",
+  review: "Correct Text",
+  professional: "Professional",
+  appealing: "Appealing",
+  emojis: "Add Emojis",
+  detail: "Detail It",
+  shorten: "Shorten Text",
+  summarize: "Summarize",
+  simplify: "Simplify",
+  friendly: "Friendly Tone",
+  translate: "Translate"
+};
+
 // Listen for messages from content scripts or popup/options pages
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "generateText") {
@@ -92,8 +109,20 @@ async function handleGenerateText(request) {
     ) {
       const generatedText = data.candidates[0].content.parts[0].text;
       
-      // Update usage metrics asynchronously
+      // Update usage metrics and record history asynchronously
       updateUsageStats(request.actionType, prompt.length, generatedText, data.usageMetadata);
+      
+      if (request.actionType) {
+        appendHistoryRecord({
+          actionType: request.actionType,
+          actionLabel: request.actionLabel || ACTION_LABELS[request.actionType] || request.actionType,
+          inputText: prompt,
+          outputText: generatedText,
+          model: model,
+          targetLanguage: request.targetLanguage || null,
+          usageMetadata: data.usageMetadata
+        });
+      }
 
       return generatedText;
     } else {
@@ -136,8 +165,12 @@ async function updateUsageStats(actionType, inputChars, outputText, usageMetadat
     }
 
     // Default calculations if usageMetadata is missing
-    const promptTokens = usageMetadata?.promptTokenCount || Math.ceil(inputChars / 4);
-    const candidateTokens = usageMetadata?.candidatesTokenCount || Math.ceil(outputText.length / 4);
+    const promptTokens = (typeof usageMetadata?.promptTokenCount === "number" && !isNaN(usageMetadata.promptTokenCount))
+      ? usageMetadata.promptTokenCount
+      : Math.ceil(inputChars / 4);
+    const candidateTokens = (typeof usageMetadata?.candidatesTokenCount === "number" && !isNaN(usageMetadata.candidatesTokenCount))
+      ? usageMetadata.candidatesTokenCount
+      : Math.ceil(outputText.length / 4);
 
     // Increment values safely
     stats.totalRequests = (stats.totalRequests || 0) + 1;
@@ -152,5 +185,51 @@ async function updateUsageStats(actionType, inputChars, outputText, usageMetadat
     await chrome.storage.local.set({ stats });
   } catch (err) {
     console.error("Error writing usage stats:", err);
+  }
+}
+
+/**
+ * Append transformation entry to history storage with a FIFO 100-item cap
+ */
+async function appendHistoryRecord({ actionType, actionLabel, inputText, outputText, model, targetLanguage, usageMetadata }) {
+  try {
+    const promptTokens = (typeof usageMetadata?.promptTokenCount === "number" && !isNaN(usageMetadata.promptTokenCount))
+      ? usageMetadata.promptTokenCount
+      : Math.ceil(inputText.length / 4);
+    const candidateTokens = (typeof usageMetadata?.candidatesTokenCount === "number" && !isNaN(usageMetadata.candidatesTokenCount))
+      ? usageMetadata.candidatesTokenCount
+      : Math.ceil(outputText.length / 4);
+    const totalTokens = (typeof usageMetadata?.totalTokenCount === "number" && !isNaN(usageMetadata.totalTokenCount))
+      ? usageMetadata.totalTokenCount
+      : (promptTokens + candidateTokens);
+
+    const record = {
+      id: "tb_hist_" + Date.now() + "_" + Math.random().toString(36).substring(2, 7),
+      timestamp: Date.now(),
+      action: actionType,
+      actionLabel: actionLabel || ACTION_LABELS[actionType] || actionType,
+      inputText,
+      outputText,
+      model: model || "gemini-3.7-flash",
+      targetLanguage: targetLanguage || null,
+      tokens: {
+        input: promptTokens,
+        output: candidateTokens,
+        total: totalTokens
+      }
+    };
+
+    const res = await chrome.storage.local.get("history");
+    let history = Array.isArray(res.history) ? res.history : [];
+    // Prepend new record (newest first)
+    history.unshift(record);
+    // Enforce 100 item FIFO cap
+    if (history.length > MAX_HISTORY_ITEMS) {
+      history = history.slice(0, MAX_HISTORY_ITEMS);
+    }
+
+    await chrome.storage.local.set({ history });
+  } catch (err) {
+    console.error("Error saving history record:", err);
   }
 }

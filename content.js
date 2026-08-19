@@ -1096,7 +1096,8 @@
           action: "generateText",
           prompt: activeSelectionText,
           systemInstruction: systemPrompt,
-          actionType: action
+          actionType: action,
+          targetLanguage: (action === "translate" || systemPrompt.includes("{targetLanguage}")) ? (targetLanguage || "English") : null
         },
         (response) => {
           if (!isExtensionValid()) return;

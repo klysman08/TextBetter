@@ -1,8 +1,8 @@
-// popup.js - Browser action popup script with analytics and UI sounds
+// popup.js - Browser action popup script with analytics, history tab, and UI sounds
 
 // Mock chrome API for local testing outside Chrome Extension environment
 if (typeof chrome === "undefined" || !chrome.storage) {
-  // Seed mock statistics and settings if mock storage is empty
+  // Seed mock statistics, history and settings if mock storage is empty
   if (!localStorage.getItem("tb_mock_storage")) {
     localStorage.setItem("tb_mock_storage", JSON.stringify({
       enabled: true,
@@ -10,6 +10,7 @@ if (typeof chrome === "undefined" || !chrome.storage) {
       muted: false,
       apiKey: "AIzaSyMockKeyForLocalPreviews",
       selectedModel: "gemini-3.7-flash",
+      targetLanguage: "English (US)",
       stats: {
         totalRequests: 24,
         inputTokens: 1480,
@@ -27,7 +28,31 @@ if (typeof chrome === "undefined" || !chrome.storage) {
           friendly: 0,
           translate: 0
         }
-      }
+      },
+      history: [
+        {
+          id: "mock_1",
+          timestamp: Date.now() - 1000 * 60 * 5,
+          action: "professional",
+          actionLabel: "Professional",
+          inputText: "hey can you send the report asap thx",
+          outputText: "Could you please provide the report at your earliest convenience? Thank you.",
+          model: "gemini-3.7-flash",
+          targetLanguage: null,
+          tokens: { input: 28, output: 35, total: 63 }
+        },
+        {
+          id: "mock_2",
+          timestamp: Date.now() - 1000 * 60 * 45,
+          action: "translate",
+          actionLabel: "Translate",
+          inputText: "Obrigado pela sua ajuda com o projeto.",
+          outputText: "Thank you for your assistance with the project.",
+          model: "gemini-3.7-flash",
+          targetLanguage: "English (GB)",
+          tokens: { input: 32, output: 29, total: 61 }
+        }
+      ]
     }));
   }
 
@@ -71,6 +96,19 @@ const openSettingsBtn = document.getElementById("open-settings-btn");
 const themeToggleBtn = document.getElementById("popup-theme-toggle");
 const soundToggleBtn = document.getElementById("popup-sound-toggle");
 
+// Tabs & Navigation
+const tabBtnDashboard = document.getElementById("tab-btn-dashboard");
+const tabBtnHistory = document.getElementById("tab-btn-history");
+const viewDashboard = document.getElementById("view-dashboard");
+const viewHistory = document.getElementById("view-history");
+const historyCountBadge = document.getElementById("history-count-badge");
+
+// History UI elements
+const historySearchInput = document.getElementById("history-search-input");
+const clearHistoryBtn = document.getElementById("clear-history-btn");
+const historyListContainer = document.getElementById("history-list");
+const historyEmptyState = document.getElementById("history-empty");
+
 // Dashboard UI elements
 const statRequests = document.getElementById("stat-requests");
 const statTokens = document.getElementById("stat-tokens");
@@ -83,6 +121,9 @@ const tokenOutputVal = document.getElementById("token-output-val");
 const tokenRatioInput = document.getElementById("token-ratio-input");
 const tokenRatioOutput = document.getElementById("token-ratio-output");
 const chartBarsContainer = document.getElementById("chart-bars-container");
+
+// In-memory history cache
+let historyRecords = [];
 
 // Web Audio API Sound Synthesiser
 let audioCtx = null;
@@ -198,6 +239,34 @@ document.addEventListener("DOMContentLoaded", async () => {
   await initializePopup();
 });
 
+// Tab Switching
+if (tabBtnDashboard && tabBtnHistory) {
+  tabBtnDashboard.addEventListener("click", () => {
+    switchTab("dashboard");
+    playSound("click");
+  });
+
+  tabBtnHistory.addEventListener("click", () => {
+    switchTab("history");
+    playSound("click");
+  });
+}
+
+function switchTab(tab) {
+  if (tab === "dashboard") {
+    tabBtnDashboard.classList.add("active");
+    tabBtnHistory.classList.remove("active");
+    viewDashboard.classList.remove("hidden");
+    viewHistory.classList.add("hidden");
+  } else {
+    tabBtnHistory.classList.add("active");
+    tabBtnDashboard.classList.remove("active");
+    viewHistory.classList.remove("hidden");
+    viewDashboard.classList.add("hidden");
+    renderHistory();
+  }
+}
+
 // Extension Toggle handler
 extensionToggle.addEventListener("change", async (e) => {
   const isEnabled = e.target.checked;
@@ -245,7 +314,6 @@ soundToggleBtn.addEventListener("click", async () => {
     initAudioContext();
     playSound("click");
   } else {
-    // Play a brief sweep down before muting
     playSound("toggle-off");
   }
 });
@@ -286,26 +354,54 @@ clearStatsBtn.addEventListener("click", async () => {
   }
 });
 
+// History search input
+if (historySearchInput) {
+  historySearchInput.addEventListener("input", () => {
+    renderHistory();
+  });
+}
+
+// Clear all history
+if (clearHistoryBtn) {
+  clearHistoryBtn.addEventListener("click", async () => {
+    if (historyRecords.length === 0) return;
+    playSound("click");
+    if (confirm("Are you sure you want to clear all transformation history?")) {
+      historyRecords = [];
+      await chrome.storage.local.set({ history: [] });
+      updateHistoryBadge();
+      renderHistory();
+      playSound("success");
+    }
+  });
+}
+
 /**
  * Initialize popup state
  */
 async function initializePopup() {
   const settings = await chrome.storage.local.get([
-    "apiKey", "selectedModel", "targetLanguage", "enabled", "theme", "stats", "muted", "autoOpen"
+    "apiKey", "selectedModel", "targetLanguage", "enabled", "theme", "stats", "muted", "autoOpen", "history"
   ]);
 
   // Set Enable/Disable switches
-  extensionToggle.checked = settings.enabled !== false; // Default to true if undefined
-  autoOpenToggle.checked = settings.autoOpen !== false; // Default to true if undefined
+  extensionToggle.checked = settings.enabled !== false;
+  autoOpenToggle.checked = settings.autoOpen !== false;
 
   // Set Model dropdown
   if (popupModelSelect) {
     popupModelSelect.value = settings.selectedModel || "gemini-3.7-flash";
   }
 
-  // Set Language dropdown
+  // Set Language dropdown with normalization
   if (popupLanguageSelect) {
-    popupLanguageSelect.value = settings.targetLanguage || "English";
+    let lang = settings.targetLanguage || "English (US)";
+    if (lang === "English") lang = "English (US)";
+    if (lang === "Portuguese") lang = "Portuguese (PT)";
+    popupLanguageSelect.value = lang;
+    if (!popupLanguageSelect.value) {
+      popupLanguageSelect.value = "English (US)";
+    }
   }
 
   // Set Theme
@@ -338,8 +434,175 @@ async function initializePopup() {
     apiStatusBadge.innerHTML = `<span class="dot"></span>No API Key`;
   }
 
+  // History cache
+  historyRecords = Array.isArray(settings.history) ? settings.history : [];
+  updateHistoryBadge();
+
   // Render stats
   displayStats(settings.stats);
+}
+
+/**
+ * Update the count badge in the History tab header
+ */
+function updateHistoryBadge() {
+  if (historyCountBadge) {
+    historyCountBadge.textContent = historyRecords.length;
+  }
+}
+
+/**
+ * Format relative timestamps
+ */
+function formatRelativeTime(timestamp) {
+  if (!timestamp) return "";
+  const diff = Date.now() - timestamp;
+  const seconds = Math.floor(diff / 1000);
+  if (seconds < 60) return "Just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+/**
+ * Render history records with search filtering
+ */
+function renderHistory() {
+  if (!historyListContainer) return;
+
+  const query = historySearchInput ? historySearchInput.value.trim().toLowerCase() : "";
+  const filtered = query
+    ? historyRecords.filter(item => 
+        (item.inputText && item.inputText.toLowerCase().includes(query)) ||
+        (item.outputText && item.outputText.toLowerCase().includes(query)) ||
+        (item.actionLabel && item.actionLabel.toLowerCase().includes(query)) ||
+        (item.action && item.action.toLowerCase().includes(query)) ||
+        (item.targetLanguage && item.targetLanguage.toLowerCase().includes(query))
+      )
+    : historyRecords;
+
+  historyListContainer.innerHTML = "";
+
+  if (filtered.length === 0) {
+    historyEmptyState.classList.remove("hidden");
+    if (query) {
+      historyEmptyState.querySelector("span").textContent = `No matches found for "${query}"`;
+    } else {
+      historyEmptyState.querySelector("span").textContent = "No transformations recorded yet.";
+    }
+    return;
+  }
+
+  historyEmptyState.classList.add("hidden");
+
+  filtered.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "history-card";
+    card.dataset.id = item.id;
+
+    const actionText = item.actionLabel || item.action || "Transformation";
+    const langBadge = item.targetLanguage ? ` → ${item.targetLanguage}` : "";
+    const totalTokens = item.tokens?.total || (item.tokens?.input || 0) + (item.tokens?.output || 0);
+    const tokenBadge = totalTokens > 0 ? `• ${totalTokens} tok` : "";
+    const timeStr = formatRelativeTime(item.timestamp);
+
+    card.innerHTML = `
+      <div class="history-card-header">
+        <span class="history-action-tag">
+          ${actionText}${langBadge}
+        </span>
+        <span class="history-time-meta">
+          <span>${timeStr}</span>
+          ${tokenBadge ? `<span>${tokenBadge}</span>` : ""}
+          <button class="history-delete-btn" title="Delete record" data-id="${item.id}" type="button">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+          </button>
+        </span>
+      </div>
+
+      <div class="history-text-block">
+        <div class="history-text-header">
+          <span class="history-text-label">Input</span>
+          <button class="history-copy-btn" data-type="input" type="button">Copy</button>
+        </div>
+        <div class="history-text-content">${escapeHtml(item.inputText || "")}</div>
+      </div>
+
+      <div class="history-text-block">
+        <div class="history-text-header">
+          <span class="history-text-label">Output</span>
+          <button class="history-copy-btn" data-type="output" type="button">Copy</button>
+        </div>
+        <div class="history-text-content">${escapeHtml(item.outputText || "")}</div>
+      </div>
+    `;
+
+    // Copy Input button
+    const copyInputBtn = card.querySelector('[data-type="input"]');
+    copyInputBtn.addEventListener("click", async () => {
+      await copyToClipboard(item.inputText || "", copyInputBtn);
+    });
+
+    // Copy Output button
+    const copyOutputBtn = card.querySelector('[data-type="output"]');
+    copyOutputBtn.addEventListener("click", async () => {
+      await copyToClipboard(item.outputText || "", copyOutputBtn);
+    });
+
+    // Delete Item button
+    const deleteBtn = card.querySelector(".history-delete-btn");
+    deleteBtn.addEventListener("click", async () => {
+      await deleteHistoryItem(item.id);
+    });
+
+    historyListContainer.appendChild(card);
+  });
+}
+
+/**
+ * Delete a single history record by ID
+ */
+async function deleteHistoryItem(id) {
+  historyRecords = historyRecords.filter(item => item.id !== id);
+  await chrome.storage.local.set({ history: historyRecords });
+  updateHistoryBadge();
+  renderHistory();
+  playSound("click");
+}
+
+/**
+ * Copy text with button state animation
+ */
+async function copyToClipboard(text, btn) {
+  try {
+    await navigator.clipboard.writeText(text);
+    playSound("click");
+    btn.textContent = "Copied!";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "Copy";
+      btn.classList.remove("copied");
+    }, 1500);
+  } catch (err) {
+    console.error("Copy failed:", err);
+  }
+}
+
+/**
+ * Escape HTML to prevent injection in history cards
+ */
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 /**
@@ -364,8 +627,8 @@ function displayStats(stats) {
   statRequests.textContent = totalReqs;
   
   // Tokens
-  const inTokens = stats.inputTokens || 0;
-  const outTokens = stats.outputTokens || 0;
+  const inTokens = Math.max(0, parseInt(stats.inputTokens, 10) || 0);
+  const outTokens = Math.max(0, parseInt(stats.outputTokens, 10) || 0);
   const totalTokens = inTokens + outTokens;
   statTokens.textContent = totalTokens.toLocaleString();
   
@@ -373,10 +636,10 @@ function displayStats(stats) {
   tokenInputVal.textContent = inTokens.toLocaleString();
   tokenOutputVal.textContent = outTokens.toLocaleString();
 
-  // Token ratio visualization
+  // Token ratio visualization (safe division)
   if (totalTokens > 0) {
-    const inPct = (inTokens / totalTokens) * 100;
-    const outPct = (outTokens / totalTokens) * 100;
+    const inPct = Math.round((inTokens / totalTokens) * 100);
+    const outPct = 100 - inPct;
     tokenRatioInput.style.width = `${inPct}%`;
     tokenRatioOutput.style.width = `${outPct}%`;
   } else {
@@ -427,30 +690,19 @@ function displayStats(stats) {
     activeActions.sort((a, b) => b.count - a.count);
 
     activeActions.forEach(({ action, count }) => {
-      // Relative scale: top action is 100%, others are proportional
-      const relPct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+      const relPct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
       const readableLabel = friendlyNames[action] || action;
 
       const chartRow = document.createElement("div");
       chartRow.className = "chart-row";
       chartRow.innerHTML = `
-        <div class="chart-row-header">
-          <span class="chart-row-name">${readableLabel}</span>
-          <span class="chart-row-count">${count}</span>
+        <span class="chart-label" title="${readableLabel}">${readableLabel}</span>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-fill" style="width: ${relPct}%"></div>
         </div>
-        <div class="chart-row-bar-bg">
-          <div class="chart-row-bar-fill" style="width: 0%"></div>
-        </div>
+        <span class="chart-val">${count}</span>
       `;
       chartBarsContainer.appendChild(chartRow);
-
-      // Trigger width transition in next paint frame for smooth grow animations
-      requestAnimationFrame(() => {
-        setTimeout(() => {
-          const fillBar = chartRow.querySelector(".chart-row-bar-fill");
-          if (fillBar) fillBar.style.width = `${relPct}%`;
-        }, 50);
-      });
     });
   }
 }

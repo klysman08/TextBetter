@@ -379,7 +379,13 @@ async function loadSettings() {
   autoOpenToggle.checked = settings.autoOpen !== false;
   iconPositionSelect.value = settings.iconPosition || "above";
   if (targetLanguageSelect) {
-    targetLanguageSelect.value = settings.targetLanguage || "English";
+    let lang = settings.targetLanguage || "English (US)";
+    if (lang === "English") lang = "English (US)";
+    if (lang === "Portuguese") lang = "Portuguese (PT)";
+    targetLanguageSelect.value = lang;
+    if (!targetLanguageSelect.value) {
+      targetLanguageSelect.value = "English (US)";
+    }
   }
   hotkeyInput.value = settings.hotkey || "";
 
@@ -417,7 +423,7 @@ async function saveAllSettings() {
     selectedModel: modelSelect.value || "gemini-3.7-flash",
     autoOpen: autoOpenToggle.checked,
     iconPosition: iconPositionSelect.value,
-    targetLanguage: targetLanguageSelect ? targetLanguageSelect.value : "English",
+    targetLanguage: targetLanguageSelect ? targetLanguageSelect.value : "English (US)",
     hotkey: hotkeyInput.value.trim()
   };
 

@@ -53,5 +53,13 @@ describe("Prompts & Translation Suite", () => {
 
     const fallbackPrompt = getInterpolatedPrompt("translate", DEFAULT_PROMPTS.translate, "");
     assert.ok(fallbackPrompt.includes("translate the user's text into English"));
+
+    const englishGbPrompt = getInterpolatedPrompt("translate", DEFAULT_PROMPTS.translate, "English (GB)");
+    assert.ok(englishGbPrompt.includes("translate the user's text into English (GB)"));
+    assert.ok(!englishGbPrompt.includes("{targetLanguage}"));
+
+    const portugueseBrPrompt = getInterpolatedPrompt("translate", DEFAULT_PROMPTS.translate, "Portuguese (BR)");
+    assert.ok(portugueseBrPrompt.includes("translate the user's text into Portuguese (BR)"));
+    assert.ok(!portugueseBrPrompt.includes("{targetLanguage}"));
   });
 });
