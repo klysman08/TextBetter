@@ -1,4 +1,4 @@
-/* index.js - TextBetter Landing Page Script & Interactive Sandbox Controller */
+/* index.js - TextBetter Landing Page Script & Interactive Sandbox Controller (v2.0.0) */
 
 document.addEventListener("DOMContentLoaded", () => {
   
@@ -8,10 +8,12 @@ document.addEventListener("DOMContentLoaded", () => {
   
   let isMuted = localStorage.getItem("textbetter_muted") === "true";
   let activeTheme = localStorage.getItem("textbetter_theme") || "light";
+  let simulatedHistoryCount = 12;
   
   const htmlElement = document.documentElement;
   const themeToggleBtn = document.getElementById("theme-toggle");
   const soundToggleBtn = document.getElementById("sound-toggle");
+  const historyBadgeCount = document.getElementById("sim-history-count");
   
   // Synchronize initial theme
   if (activeTheme === "dark" || (activeTheme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
@@ -128,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
           
           osc.type = "sine";
           osc.frequency.setValueAtTime(440, now);
-          osc.frequency.exponentialRampToValueAtTime(260, now + 0.1);
+          osc.frequency.exponentialRampToValueAtTime(220, now + 0.1);
           
           gain.gain.setValueAtTime(0.03, now);
           gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
@@ -142,61 +144,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         case "typing": {
-          // Tiny, quiet tick at random frequency
+          // Very soft mechanical keyboard tick
           const osc = audioCtx.createOscillator();
           const gain = audioCtx.createGain();
           
           osc.type = "sine";
-          const randomFreq = 500 + Math.random() * 200;
-          osc.frequency.setValueAtTime(randomFreq, now);
+          osc.frequency.setValueAtTime(1400, now);
+          osc.frequency.exponentialRampToValueAtTime(200, now + 0.015);
           
-          gain.gain.setValueAtTime(0.006, now);
-          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.02);
+          gain.gain.setValueAtTime(0.008, now);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.015);
           
           osc.connect(gain);
           gain.connect(audioCtx.destination);
           
           osc.start(now);
-          osc.stop(now + 0.03);
+          osc.stop(now + 0.02);
           break;
         }
       }
-    } catch (e) {
-      console.warn("Audio Context blocked or unsupported:", e);
+    } catch {
+      // Ignore audio synthesis errors on autoplay restrictions
     }
   }
 
   // ==========================================
-  // 3. THEME & SOUND CONTROLS LOGIC
+  // 3. UI CONTROLS & HEADER LISTENERS
   // ==========================================
 
-  function updateThemeIcon(isDark) {
-    if (!themeToggleBtn) return;
-    const sunIcon = themeToggleBtn.querySelector(".sun-icon");
-    const moonIcon = themeToggleBtn.querySelector(".moon-icon");
-    if (isDark) {
-      if (sunIcon) sunIcon.classList.add("hidden");
-      if (moonIcon) moonIcon.classList.remove("hidden");
-    } else {
-      if (sunIcon) sunIcon.classList.remove("hidden");
-      if (moonIcon) moonIcon.classList.add("hidden");
-    }
-  }
-
-  function updateSoundIcon(muted) {
-    if (!soundToggleBtn) return;
-    const soundOnIcon = soundToggleBtn.querySelector(".sound-on-icon");
-    const soundOffIcon = soundToggleBtn.querySelector(".sound-off-icon");
-    if (muted) {
-      if (soundOnIcon) soundOnIcon.classList.add("hidden");
-      if (soundOffIcon) soundOffIcon.classList.remove("hidden");
-    } else {
-      if (soundOnIcon) soundOnIcon.classList.remove("hidden");
-      if (soundOffIcon) soundOffIcon.classList.add("hidden");
-    }
-  }
-
-  // Toggle Dark Mode
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener("click", () => {
       const isDark = htmlElement.classList.toggle("dark");
@@ -206,37 +181,60 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Toggle Mute
+  function updateThemeIcon(isDark) {
+    if (!themeToggleBtn) return;
+    const sunIcon = themeToggleBtn.querySelector(".sun-icon");
+    const moonIcon = themeToggleBtn.querySelector(".moon-icon");
+    
+    if (isDark) {
+      if (sunIcon) sunIcon.classList.add("hidden");
+      if (moonIcon) moonIcon.classList.remove("hidden");
+    } else {
+      if (sunIcon) sunIcon.classList.remove("hidden");
+      if (moonIcon) moonIcon.classList.add("hidden");
+    }
+  }
+
   if (soundToggleBtn) {
     soundToggleBtn.addEventListener("click", () => {
       isMuted = !isMuted;
       localStorage.setItem("textbetter_muted", isMuted ? "true" : "false");
       updateSoundIcon(isMuted);
-      
-      // Play a click sound immediately when unmuting to give feedback
       if (!isMuted) {
-        initAudioContext();
-        playSound("click");
+        playSound("toggle-on");
       }
     });
   }
 
+  function updateSoundIcon(muted) {
+    if (!soundToggleBtn) return;
+    const soundOn = soundToggleBtn.querySelector(".sound-on-icon");
+    const soundOff = soundToggleBtn.querySelector(".sound-off-icon");
+    
+    if (muted) {
+      if (soundOn) soundOn.classList.add("hidden");
+      if (soundOff) soundOff.classList.remove("hidden");
+    } else {
+      if (soundOn) soundOn.classList.remove("hidden");
+      if (soundOff) soundOff.classList.add("hidden");
+    }
+  }
+
   // ==========================================
-  // 4. INTERACTIVE SANDBOX SIMULATOR
+  // 4. INTERACTIVE SIMULATOR / EXTENSION SANDBOX
   // ==========================================
 
   const editorInput = document.getElementById("editor-input");
+  const floatingBar = document.getElementById("sim-floating-bar");
+  const outputCard = document.getElementById("sim-output-card");
+  const outputSpinner = document.getElementById("output-spinner");
+  const outputBadgeText = document.getElementById("output-badge-text");
+  const outputText = document.getElementById("sim-output-text");
+  const instructionOverlay = document.querySelector(".sim-instruction-overlay");
+  const chips = document.querySelectorAll(".sim-chip");
+  const actionButtons = document.querySelectorAll(".action-btn");
+  
   if (editorInput) {
-    const floatingBar = document.getElementById("sim-floating-bar");
-    const outputCard = document.getElementById("sim-output-card");
-    const outputText = document.getElementById("sim-output-text");
-    const outputSpinner = document.getElementById("output-spinner");
-    const outputBadgeText = document.getElementById("output-badge-text");
-    const instructionOverlay = document.querySelector(".sim-instruction-overlay");
-    
-    const chips = document.querySelectorAll(".sim-chip");
-    const actionButtons = document.querySelectorAll(".floating-actions .action-btn");
-    
     const btnCopy = document.getElementById("btn-copy-sim");
     const btnReplace = document.getElementById("btn-replace-sim");
     const btnClose = document.getElementById("btn-close-sim");
@@ -245,10 +243,10 @@ document.addEventListener("DOMContentLoaded", () => {
     let typingTimer = null;
 
     // Initial prompt text
-    const initialText = "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.";
+    const initialText = "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.";
     editorInput.value = initialText;
 
-    // Floating menu responses database
+    // Floating menu responses database for v2.0 actions
     const simulationResponses = {
       professional: {
         "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
@@ -256,7 +254,29 @@ document.addEventListener("DOMContentLoaded", () => {
         "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
           "We have developed a high-performance Chrome extension designed to streamline writing improvements by integrating directly with the Gemini API.",
         "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
-          "I am pleased to announce that our newly redesigned website has officially launched. We invite you to explore the updates."
+          "I am pleased to announce that our newly redesigned website has officially launched. We invite you to explore the updates.",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "This solution empowers professionals to refine grammar, adjust communication tones, perform multilingual translations, and maintain a comprehensive audit log of transformation history."
+      },
+      translate: {
+        "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
+          "Estou escrevendo para pedir que você dê uma olhada nas minhas alterações de código hoje à noite, se possível. Me responda.",
+        "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
+          "Criamos uma extensão do Chrome para aprimoramento de escrita. Ela é extremamente rápida e se conecta diretamente à API do Gemini.",
+        "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
+          "Estou super animado para compartilhar que finalmente lançamos o novo design do site! Dê uma olhada!",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "Este produto ajuda você a melhorar a gramática, reescrever tons, traduzir entre idiomas e salvar o histórico de transformações diretamente."
+      },
+      bullets: {
+        "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
+          "• Code review request for tonight\n• Please review recent changes\n• Awaiting your reply",
+        "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
+          "• High-performance Chrome extension\n• Instant writing improvements\n• Direct Google Gemini API connection",
+        "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
+          "• Brand new website redesign shipped\n• Officially live today\n• Check out the updates",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "• Spotless grammar correction & style rewrites\n• Multilingual translation with regional dialects\n• Searchable transformation history & CSV export\n• Zero middleman servers with local sandbox storage"
       },
       emojis: {
         "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
@@ -264,15 +284,19 @@ document.addEventListener("DOMContentLoaded", () => {
         "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
           "We built a Chrome extension for writing improvements! 🚀 Super fast ⚡ and connects directly to the Gemini API! 🧠",
         "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
-          "Super excited to share that we officially shipped the brand new website redesign! 🎉 Check it out! 👀✨"
+          "Super excited to share that we officially shipped the brand new website redesign! 🎉 Check it out! 👀✨",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "Boost your writing, fix grammar, translate effortlessly & save your history! 🚀✨ Powered by Gemini! 🧠💡"
       },
       shorten: {
         "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
           "Could you review my code changes tonight? Let me know.",
         "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
-          "We built a fast Chrome extension for writing improvements, powered directly by the Gemini API.",
+          "We built a fast Chrome extension for writing improvements, powered directly by Gemini.",
         "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
-          "Excited to announce our new website redesign is live! Check it out."
+          "Excited to announce our new website redesign is live! Check it out.",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "Improve grammar, rewrite, translate, and track transformation history directly with Gemini."
       },
       review: {
         "i am writing to ask if you can look at my code changes maybe tonight. text me back.": 
@@ -280,7 +304,9 @@ document.addEventListener("DOMContentLoaded", () => {
         "we made a chrome extension that does writing improvements. it is extremely fast and hooks directly into gemini api.": 
           "We made a Chrome extension that improves writing. It is extremely fast and connects directly to the Gemini API.",
         "im super excited to let everyone know we finally shipped the brand new website redesign check it out!": 
-          "I'm super excited to let everyone know we finally shipped the brand new website redesign! Check it out!"
+          "I'm super excited to let everyone know we finally shipped the brand new website redesign! Check it out!",
+        "this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.":
+          "This product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly."
       }
     };
 
@@ -310,10 +336,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedText.length > 0) {
         currentSelection = { start, end, text: selectedText };
         hideInstructions();
-        if (outputCard) outputCard.classList.add("hidden"); // close output card if selecting new text
+        if (outputCard) outputCard.classList.add("hidden");
         positionFloatingBar();
       } else {
-        // If click was inside, keep the bar visible if text wasn't empty, otherwise hide
         setTimeout(() => {
           if (floatingBar && document.activeElement !== editorInput && !floatingBar.contains(document.activeElement)) {
             floatingBar.classList.add("hidden");
@@ -362,9 +387,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function triggerSimulation(action) {
       if (outputCard) outputCard.classList.remove("hidden");
       if (outputSpinner) outputSpinner.classList.remove("hidden");
-      if (outputBadgeText) outputBadgeText.textContent = "Gemini thinking...";
+      if (outputBadgeText) outputBadgeText.textContent = "Gemini 3.7 Flash thinking...";
       if (outputText) {
-        outputText.textContent = "Waiting for response...";
+        outputText.textContent = "Processing with Gemini...";
         outputText.classList.add("loading");
       }
       
@@ -381,23 +406,36 @@ document.addEventListener("DOMContentLoaded", () => {
       // Simulate API delay
       setTimeout(() => {
         if (outputSpinner) outputSpinner.classList.add("hidden");
-        if (outputBadgeText) outputBadgeText.textContent = "Gemini Suggestion";
+        if (outputBadgeText) {
+          const actionLabels = {
+            professional: "Gemini 3.7 • Professional",
+            translate: "Gemini 3.7 • Translation (pt-BR)",
+            review: "Gemini 3.7 • Corrected",
+            bullets: "Gemini 3.7 • Bullet Points",
+            emojis: "Gemini 3.7 • Expressive",
+            shorten: "Gemini 3.7 • Shortened"
+          };
+          outputBadgeText.textContent = actionLabels[action] || "Gemini 3.7 Suggestion";
+        }
         if (outputText) {
           outputText.classList.remove("loading");
           outputText.textContent = "";
         }
         
-        // Get predefined response or write a custom responsive message
+        // Get predefined response or fallback
         const inputText = currentSelection.text.toLowerCase();
         let responseText = "";
         
         if (simulationResponses[action] && simulationResponses[action][inputText]) {
           responseText = simulationResponses[action][inputText];
         } else {
-          // Fallback for custom user typing
           const cleanInput = currentSelection.text;
           if (action === "professional") {
             responseText = `With reference to your message: "${cleanInput}", I have polished the text for enhanced clarity, adopting a more formal tone suitable for standard business communication.`;
+          } else if (action === "translate") {
+            responseText = `Tradução: "${cleanInput}" adaptado para português com precisão de dialeto regional.`;
+          } else if (action === "bullets") {
+            responseText = `• ${cleanInput}\n• Key takeaway and action point\n• Verified by Gemini`;
           } else if (action === "emojis") {
             responseText = `✨ ${cleanInput} ✨ 🚀💻 Let's get this done! 🙌`;
           } else if (action === "shorten") {
@@ -415,7 +453,6 @@ document.addEventListener("DOMContentLoaded", () => {
           if (charIndex < responseText.length) {
             if (outputText) outputText.textContent += responseText.charAt(charIndex);
             
-            // Play silent ticks on typing
             if (charIndex % 3 === 0) {
               playSound("typing");
             }
@@ -433,11 +470,17 @@ document.addEventListener("DOMContentLoaded", () => {
               btnReplace.style.opacity = "1";
             }
             
+            // Increment simulated history
+            simulatedHistoryCount++;
+            if (historyBadgeCount) {
+              historyBadgeCount.textContent = `${simulatedHistoryCount} saved in history`;
+            }
+            
             playSound("success");
           }
-        }, 20);
+        }, 18);
 
-      }, 1200); // Realistic 1.2s delay for LLM processing
+      }, 1000); // 1.0s delay mimicking fast Gemini 3.7 Flash API
     }
 
     // Close preview
@@ -479,7 +522,7 @@ document.addEventListener("DOMContentLoaded", () => {
         playSound("success");
         if (outputCard) outputCard.classList.add("hidden");
         
-        // Highlight the newly replaced text to draw visual connection
+        // Highlight the newly replaced text
         editorInput.focus();
         editorInput.setSelectionRange(currentSelection.start, currentSelection.start + textToInsert.length);
       });

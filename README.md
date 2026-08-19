@@ -8,28 +8,42 @@ Designed with **Shadcn Zinc** aesthetics, a native Web Audio synthesis engine, a
 
 ---
 
-## ✦ Key Features
+## ✦ Key Features in v2.0.0
 
-- 🧠 **Latest Gemini Models**:
-  - **Gemini 3.5 Flash** (Default / Recommended): Frontier-level reasoning and agentic text edits.
+- 🧠 **Next-Generation Gemini Models**:
+  - **Gemini 3.7 Flash** (Default / Recommended): State-of-the-art speed, reasoning, and nuanced editing.
+  - **Gemini 3.5 Flash**: Frontier-level multimodal reasoning and text refinement.
   - **Gemini 3.1 Flash-Lite**: High-throughput, ultra-fast responses for quick edits.
+  - **Gemini 2.5 Flash & Pro**: Reliable, battle-tested options for extensive transformations.
 - 🔒 **Offline-First Privacy**: No middleman servers. Your Gemini API key is stored securely in your browser's local sandbox (`chrome.storage.local`) and all calls go directly to Google's official endpoints.
-- ⚙️ **7 Powerful Writing Actions**:
+- 🌐 **11 Writing Actions & Multilingual Translation**:
   - **Rewrite**: Improve general flow and style while maintaining the original meaning.
   - **Review**: Spotless grammar, punctuation, and spelling correction.
   - **Professional**: Upgrade to business-formal, crisp corporate tone.
+  - **Casual**: Friendly, approachable, and natural phrasing.
+  - **Academic**: Rigorous, scholarly vocabulary and syntax.
+  - **Bullet Points**: Convert dense paragraphs into clean, scannable lists.
+  - **Simplify**: Plain language translation for complex concepts.
   - **Appealing**: Engaging, persuasive copywriting edits.
   - **Emojis**: Infuse expressive, tasteful emojis.
   - **Detail**: Expand and elaborate with rich context.
   - **Shorten**: Condense to direct, brief sentences.
+  - **Translate**: Accurate translation with customizable target languages and regional variants (e.g., `pt-BR`, `es-MX`, `en-GB`, `ja`, `de`, `fr`, etc.).
+- 📜 **Transformation History & Token Analytics**:
+  - Complete history log of past text transformations in the tabbed popup UI.
+  - Search & query filtering across original text, transformed text, and action labels.
+  - Real-time token usage breakdown (prompt tokens vs candidate tokens).
+  - Quick 1-click CSV export and individual item deletion.
+- ⌨️ **Keyboard Shortcut Engine & Smart Triggers**:
+  - Global customizable shortcut (e.g., `Ctrl+Shift+K`, `Alt+Space`) to instantly open the rewrite bar on any selected text.
+  - Built-in interactive shortcut recorder in Settings.
+  - Configurable trigger icon placement (`Above Selection` or `Below Selection`) and Auto-open toggle.
+- ⚡ **Universal & Resilient Input Replacement**:
+  - 1-click text replacement across standard inputs, textareas, `contenteditable` divs, and modern web apps (Microsoft Teams, Slack, Notion, Google Docs / ProseMirror, Lexical, Draft.js, Monaco editor).
+  - Safe extension context invalidation handling.
 - 🎨 **Shadcn Zinc Design System**: A responsive UI with a custom dark/light theme matching Shadcn's modern palette.
 - 🔊 **Synthesized UI Sounds**: Responsive audio feedback (clicks, successes, error blips) synthesized in real-time using the **Web Audio API** (completely mutable in settings).
-- ⚙️ **Behavior Customization**:
-  - **Auto-open Toggle**: Toggle whether the floating trigger button automatically opens after text selection. Available in both options page and extension popup menus.
-  - **Icon Position**: Choose to render the floating trigger icon either `Above Selection` or `Below Selection` to match your browsing comfort.
-  - **Trigger Shortcut**: Record a custom keystroke combination (e.g., `Ctrl+Shift+K`) inside the settings page to open the writing assistant instantly for selected text.
-- 📊 **Usage Dashboard**: Real-time tracking of request history, input/output token counts, and most-used actions.
-- 📝 **Custom Prompts**: Edit the prompt instructions sent to Gemini for each of the 7 actions directly from the settings page.
+- 📝 **Customizable Prompts**: Edit system prompt instructions sent to Gemini for each action directly from the settings page.
 - ☕ **Support & GitHub**: Built-in Stripe donation ("Buy me a coffee") and official GitHub repository links on both settings and popup menus.
 
 ---

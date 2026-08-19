@@ -1,7 +1,7 @@
 {
   "name": "textbetter",
-  "version": "1.2.0",
-  "description": "Your premium, Gemini-powered AI writing assistant with Shadcn Zinc styling.",
+  "version": "2.0.0",
+  "description": "Your premium, Gemini-powered AI writing assistant with multilingual translation and history tracking.",
   "type": "module",
   "scripts": {
     "test": "node --test tests/**/*.test.js"

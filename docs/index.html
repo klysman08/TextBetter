@@ -5,20 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <!-- SEO Meta Tags -->
-  <title>TextBetter — Premium Gemini-Powered AI Writing Assistant</title>
-  <meta name="description" content="Enhance your writing instantly on any website. TextBetter is a premium, privacy-focused Chrome extension powered by Gemini API, designed with Shadcn Zinc aesthetics.">
-  <meta name="keywords" content="TextBetter, writing assistant, Chrome extension, Gemini AI, AI writing, privacy-focused, productivity tool">
+  <title>TextBetter — Premium Gemini-Powered AI Writing Assistant & Translator (v2.0.0)</title>
+  <meta name="description" content="Enhance and translate your writing instantly on any website. TextBetter is a privacy-first Chrome extension powered by Gemini 3.7 Flash, featuring 11 AI writing modes, transformation history, and custom keyboard shortcuts.">
+  <meta name="keywords" content="TextBetter, writing assistant, Chrome extension, Gemini 3.7 Flash, AI translator, grammar checker, privacy-focused, productivity tool, keyboard shortcuts">
   <meta name="author" content="TextBetter">
   
   <!-- Open Graph -->
-  <meta property="og:title" content="TextBetter — Gemini-Powered AI Writing Assistant">
-  <meta property="og:description" content="Improve, shorten, expand, or add tone to any selected text directly on your browser using Gemini API.">
+  <meta property="og:title" content="TextBetter — Gemini-Powered AI Writing Assistant & Translator">
+  <meta property="og:description" content="Instant rewrite, grammar check, multilingual translation, transformation history, and keyboard shortcuts directly in your browser.">
   <meta property="og:type" content="website">
   
   <!-- Google Fonts (Inter) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <!-- Favicons -->
   <link rel="icon" type="image/png" sizes="16x16" href="icon16.png">
@@ -38,10 +38,12 @@
           <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
         </svg>
         <span class="logo-text">TextBetter</span>
+        <span class="version-tag">v2.0.0</span>
       </a>
       
       <nav class="nav-links">
         <a href="#features" class="nav-link">Features</a>
+        <a href="#models" class="nav-link">Models</a>
         <a href="#setup" class="nav-link">Setup</a>
         <a href="#faq" class="nav-link">FAQ</a>
       </nav>
@@ -83,7 +85,7 @@
         </button>
 
         <!-- Primary CTA -->
-        <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" class="btn btn-primary btn-sm" target="_blank">Install Extension</a>
+        <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">Install Extension</a>
       </div>
     </div>
   </header>
@@ -94,36 +96,40 @@
       <div class="hero-content">
         <div class="badge-new">
           <span class="badge-dot"></span>
-          <span>Powered directly by Gemini API</span>
+          <span>Version 2.0.0 is Live • Powered by Gemini 3.7 Flash</span>
         </div>
-        <h1 class="hero-title">Write better, instantly, on any page.</h1>
+        <h1 class="hero-title">Write, translate & refine text instantly anywhere.</h1>
         <p class="hero-description">
-          A premium, minimal writing assistant extension styled with clean zinc aesthetics. Highlight text, choose an action, and refine your sentences without leaving your browser tabs.
+          A privacy-first AI writing assistant engineered with Shadcn Zinc aesthetics. Highlight text on any page to rewrite, correct grammar, translate with regional dialects, and track transformation history with zero monthly fees.
         </p>
         
         <div class="hero-actions-group">
-          <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" class="btn btn-primary" target="_blank">
-            <span>Install Extension</span>
+          <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" class="btn btn-primary" target="_blank" rel="noopener noreferrer">
+            <span>Add to Chrome (Free)</span>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
             </svg>
           </a>
-          <a href="#features" class="btn btn-outline">Explore Features</a>
+          <a href="#features" class="btn btn-outline">Explore v2.0 Features</a>
         </div>
 
         <div class="hero-features-brief">
           <div class="brief-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>100% Privacy First</span>
+            <span>100% Client-Side Privacy</span>
           </div>
           <div class="brief-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>Custom Prompts</span>
+            <span>15+ Translation Dialects</span>
           </div>
           <div class="brief-item">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
-            <span>No Server Fees</span>
+            <span>Hotkey Trigger (Ctrl+Shift+K)</span>
+          </div>
+          <div class="brief-item">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <span>History & CSV Export</span>
           </div>
         </div>
       </div>
@@ -140,7 +146,11 @@
             </div>
             <div class="sim-address-bar">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-              <span>sandbox.textbetter.dev</span>
+              <span>sandbox.textbetter.dev (Try Live Demo)</span>
+            </div>
+            <div class="sim-history-badge" title="Simulated transformation history">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+              <span id="sim-history-count">History active</span>
             </div>
           </div>
           
@@ -151,7 +161,7 @@
             <!-- Instructions overlay -->
             <div class="sim-instruction-overlay">
               <span class="pulse-indicator"></span>
-              <span>Click a sample text below to see how it works!</span>
+              <span>Click a template below to see the interactive assistant!</span>
             </div>
 
             <!-- Simulated Floating Bar -->
@@ -160,20 +170,27 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
                 </svg>
-                <span>TextBetter</span>
+                <span>TextBetter Assistant</span>
+                <span class="hotkey-indicator">Ctrl+Shift+K</span>
               </div>
               <div class="floating-actions">
                 <button class="action-btn" data-action="professional">
                   <span>💼 Professional</span>
                 </button>
+                <button class="action-btn" data-action="translate">
+                  <span>🌐 Translate (pt-BR / es)</span>
+                </button>
+                <button class="action-btn" data-action="review">
+                  <span>🔍 Review & Fix</span>
+                </button>
+                <button class="action-btn" data-action="bullets">
+                  <span>📝 Bullet Points</span>
+                </button>
                 <button class="action-btn" data-action="emojis">
-                  <span>✨ Emojis</span>
+                  <span>✨ Expressive Emojis</span>
                 </button>
                 <button class="action-btn" data-action="shorten">
                   <span>✂️ Shorten</span>
-                </button>
-                <button class="action-btn" data-action="review">
-                  <span>🔍 Correct</span>
                 </button>
               </div>
             </div>
@@ -183,7 +200,7 @@
               <div class="output-card-header">
                 <div class="output-badge">
                   <span class="spinner-icon hidden" id="output-spinner"></span>
-                  <span id="output-badge-text">Gemini Output</span>
+                  <span id="output-badge-text">Gemini 3.7 Output</span>
                 </div>
                 <div class="output-card-actions">
                   <button id="btn-copy-sim" class="btn-text-action" title="Copy text">
@@ -224,94 +241,87 @@
               <button class="sim-chip" data-text="im super excited to let everyone know we finally shipped the brand new website redesign check it out!">
                 📢 Social Post
               </button>
+              <button class="sim-chip" data-text="this product helps you improve grammar, rewrite tones, translate across languages, and save transformation history directly.">
+                🌐 Multilingual / Bullets
+              </button>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Features Section -->
+    <!-- Features Section (v2.0 Pillars) -->
     <section id="features" class="features-section">
       <div class="container">
         <div class="section-header">
-          <h2 class="section-title">Designed for modern writing workflows</h2>
+          <h2 class="section-title">Built for high-performance writing workflows</h2>
           <p class="section-subtitle">
-            An intentionally designed helper that fits in naturally with your browser. No distracting AI glows or bloated tabs, just clean inputs and helpful summaries.
+            Version 2.0 introduces deep regional translations, full transformation tracking, custom hotkeys, and native Gemini 3.7 Flash intelligence.
           </p>
         </div>
 
         <div class="features-grid">
-          <!-- Card 1: Direct Key Connection -->
+          <!-- Card 1: Gemini 3.7 Intelligence -->
           <div class="feature-card">
             <div class="feature-icon-wrapper">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                <path d="M12 2L14.85 9.15L22 12L14.85 14.85L12 22L9.15 14.85L2 12L9.15 9.15L12 2Z" />
               </svg>
             </div>
-            <h3 class="feature-title">Direct API Access</h3>
+            <h3 class="feature-title">Gemini 3.7 Flash Intelligence</h3>
             <p class="feature-description">
-              No subscription or monthly fees. Hook up your own Google Gemini API key. All connections are directly made from your browser to Google servers.
+              Powered by Google's premier Flash models with frontier-level reasoning, nuanced tone adjustment, and lightning-fast streaming speeds.
             </p>
           </div>
 
-          <!-- Card 2: Custom Prompts -->
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </div>
-            <h3 class="feature-title">Prompt Customization</h3>
-            <p class="feature-description">
-              Tweak templates for each of the pre-set commands. Customize instructions for professional tones, emojis, translations, or shortening text.
-            </p>
-          </div>
-
-          <!-- Card 3: Model Selection -->
+          <!-- Card 2: Multilingual Translation -->
           <div class="feature-card">
             <div class="feature-icon-wrapper">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10"></circle>
-                <polygon points="12 8 8 12 12 16 16 12 12 8"></polygon>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
               </svg>
             </div>
-            <h3 class="feature-title">Model Choices</h3>
+            <h3 class="feature-title">Regional Dialect Translation</h3>
             <p class="feature-description">
-              Pick the right brain for your task. Choose between Gemini 3.5 Flash for high performance reasoning, or Gemini 3.1 Flash-Lite for ultra-fast corrections.
+              Translate instantly across 15+ languages with precision dialect support (Brazilian Portuguese, Mexican Spanish, British English, Japanese, German, and more).
             </p>
           </div>
 
-          <!-- Card 4: Light & Dark Modes -->
+          <!-- Card 3: Transformation History -->
           <div class="feature-card">
             <div class="feature-icon-wrapper">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
             </div>
-            <h3 class="feature-title">Zinc Theming</h3>
+            <h3 class="feature-title">History & Token Accounting</h3>
             <p class="feature-description">
-              Built using design tokens matching Shadcn UI's zinc themes. Perfect readability and accessible contrast in both light and dark systems.
+              Keep a searchable audit trail of past transformations. Filter by action or keyword, view exact token counts, and export records to CSV with one click.
             </p>
           </div>
 
-          <!-- Card 5: Real-Time Stats -->
+          <!-- Card 4: Keyboard Shortcuts -->
           <div class="feature-card">
             <div class="feature-icon-wrapper">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="20" x2="18" y2="10"></line>
-                <line x1="12" y1="20" x2="12" y2="4"></line>
-                <line x1="6" y1="20" x2="6" y2="14"></line>
+                <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                <line x1="6" y1="8" x2="6.01" y2="8"></line>
+                <line x1="10" y1="8" x2="10.01" y2="8"></line>
+                <line x1="14" y1="8" x2="14.01" y2="8"></line>
+                <line x1="18" y1="8" x2="18.01" y2="8"></line>
+                <line x1="7" y1="16" x2="17" y2="16"></line>
               </svg>
             </div>
-            <h3 class="feature-title">Analytics Dashboard</h3>
+            <h3 class="feature-title">Custom Keyboard Shortcuts</h3>
             <p class="feature-description">
-              Keep tabs on your API usage directly inside the extension popup. See total requests made, tokens used, and your top rewriting action.
+              Trigger the rewrite bar instantly with customizable hotkeys (like <code>Ctrl+Shift+K</code> or <code>Alt+Space</code>). Includes an interactive keystroke recorder.
             </p>
           </div>
 
-          <!-- Card 6: Inline Substitution -->
+          <!-- Card 5: Universal Input Replacement -->
           <div class="feature-card">
             <div class="feature-icon-wrapper">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -322,10 +332,70 @@
                 <line x1="4" y1="4" x2="9" y2="9"></line>
               </svg>
             </div>
-            <h3 class="feature-title">Inline Substitution</h3>
+            <h3 class="feature-title">Universal Form Replacement</h3>
             <p class="feature-description">
-              No copy-paste needed. When writing in comment boxes, text areas, or forms, insert suggestions directly back into the inputs instantly.
+              Seamless 1-click text insertion inside Microsoft Teams, Slack, Notion, Google Docs / ProseMirror, Lexical, Draft.js, and Monaco editors.
             </p>
+          </div>
+
+          <!-- Card 6: 100% Privacy -->
+          <div class="feature-card">
+            <div class="feature-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h3 class="feature-title">Local-First Sandbox Privacy</h3>
+            <p class="feature-description">
+              Zero middleman servers or user tracking. Your Gemini API key and prompt history are stored strictly in your browser's encrypted sandbox.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Models Comparison Section -->
+    <section id="models" class="models-section">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Select your preferred Gemini engine</h2>
+          <p class="section-subtitle">Switch seamlessly in settings between speed, reasoning depth, and cost efficiency.</p>
+        </div>
+
+        <div class="models-grid">
+          <!-- Gemini 3.7 Flash -->
+          <div class="model-card featured">
+            <div class="model-badge">Recommended • Default</div>
+            <h3 class="model-name">Gemini 3.7 Flash</h3>
+            <p class="model-tagline">The new gold standard for reasoning & speed</p>
+            <ul class="model-bullets">
+              <li>High-nuance editing & context retention</li>
+              <li>Exceptional multilingual fluency</li>
+              <li>Ultra-fast streaming response</li>
+            </ul>
+          </div>
+
+          <!-- Gemini 3.5 Flash -->
+          <div class="model-card">
+            <h3 class="model-name">Gemini 3.5 Flash</h3>
+            <p class="model-tagline">Frontier-grade multimodal foundation</p>
+            <ul class="model-bullets">
+              <li>Rigorous corporate & academic tone</li>
+              <li>Strong structured prompt adherence</li>
+              <li>Reliable for long-context rewriting</li>
+            </ul>
+          </div>
+
+          <!-- Gemini 3.1 Flash-Lite -->
+          <div class="model-card">
+            <h3 class="model-name">Gemini 3.1 Flash-Lite</h3>
+            <p class="model-tagline">High-throughput rapid corrections</p>
+            <ul class="model-bullets">
+              <li>Instant response for quick grammar checks</li>
+              <li>Lowest token overhead</li>
+              <li>Ideal for high-volume daily writing</li>
+            </ul>
           </div>
         </div>
       </div>
@@ -336,32 +406,32 @@
       <div class="container max-w-4xl">
         <div class="section-header">
           <h2 class="section-title">Get Started in 3 Steps</h2>
-          <p class="section-subtitle">How to install the extension and connect it to Google Gemini.</p>
+          <p class="section-subtitle">Easy setup with zero complex configuration.</p>
         </div>
 
         <div class="setup-timeline">
           <div class="setup-step">
             <div class="step-number">1</div>
             <div class="step-content">
-              <h3 class="step-title">Clone & Pack the Extension</h3>
+              <h3 class="step-title">Install the Extension</h3>
               <p class="step-description mb-4">
-                Since TextBetter is in developer mode, you can download the code and load it unpacked:
+                Install TextBetter directly from the Chrome Web Store, or load it unpacked from GitHub for developer previews:
               </p>
+              <div class="setup-install-btns mb-3">
+                <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-sm">Install from Chrome Web Store</a>
+              </div>
               <div class="code-block">
                 <code>git clone https://github.com/klysman08/TextBetter.git</code>
               </div>
-              <p class="step-description mt-4">
-                Navigate to <code>chrome://extensions</code> in your Chrome browser, enable <strong>Developer mode</strong> in the top right, and click <strong>Load unpacked</strong>. Select this project directory.
-              </p>
             </div>
           </div>
 
           <div class="setup-step">
             <div class="step-number">2</div>
             <div class="step-content">
-              <h3 class="step-title">Get your Gemini API Key</h3>
+              <h3 class="step-title">Get your Free Gemini API Key</h3>
               <p class="step-description">
-                Head to <a href="https://aistudio.google.com/apikey" target="_blank" class="link-underlined">Google AI Studio</a>, log in with your Google account, and generate a new API key. It takes less than a minute and has a generous free tier.
+                Head to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="link-underlined">Google AI Studio</a>, log in with your Google account, and generate a new API key in under 30 seconds.
               </p>
             </div>
           </div>
@@ -369,9 +439,9 @@
           <div class="setup-step">
             <div class="step-number">3</div>
             <div class="step-content">
-              <h3 class="step-title">Configure and Select Text</h3>
+              <h3 class="step-title">Configure & Write Better</h3>
               <p class="step-description">
-                Click the extension icon, paste your API key, and click <strong>Save Settings</strong>. Now, simply highlight any text on a web page, and double-click or select to see the TextBetter action bar.
+                Open TextBetter settings, paste your key, and customize your trigger hotkey (default <code>Ctrl+Shift+K</code>). Highlight any text on any page to begin!
               </p>
             </div>
           </div>
@@ -384,66 +454,81 @@
       <div class="container max-w-4xl">
         <div class="section-header">
           <h2 class="section-title">Frequently Asked Questions</h2>
-          <p class="section-subtitle">Got questions about privacy, billing, or security? We've got answers.</p>
+          <p class="section-subtitle">Everything you need to know about TextBetter v2.0.</p>
         </div>
 
         <div class="faq-accordion-group">
           <!-- FAQ 1 -->
           <div class="faq-item">
-            <button class="faq-trigger" aria-expanded="false">
-              <span>Is my API Key secure?</span>
+            <button class="faq-trigger" aria-expanded="false" type="button">
+              <span>Is my API Key and transformation history secure?</span>
               <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
             <div class="faq-content">
               <div class="faq-content-inner">
-                Yes, absolutely. TextBetter is built with an offline-first privacy model. Your API key is stored securely in your browser's local sandbox storage using <code>chrome.storage.local</code>. No server receives this key, and all API queries go directly from your local browser client to Google's official Gemini API servers.
+                Yes, 100%. TextBetter is built with an offline-first privacy model. Your API key, transformation records, and custom shortcuts are stored exclusively in your browser's local sandbox storage using <code>chrome.storage.local</code>. No middleman server receives your text or API keys.
               </div>
             </div>
           </div>
 
           <!-- FAQ 2 -->
           <div class="faq-item">
-            <button class="faq-trigger" aria-expanded="false">
-              <span>Does this cost money?</span>
+            <button class="faq-trigger" aria-expanded="false" type="button">
+              <span>Does TextBetter cost money or require a subscription?</span>
               <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
             <div class="faq-content">
               <div class="faq-content-inner">
-                The extension itself is 100% free and open-source. For the AI processing, Google AI Studio offers a free tier for Gemini models (like Gemini 3.1 Flash-Lite) which handles hundreds of queries per day at no cost. You only pay if you exceed those limits and set up billing, but for standard user workloads, it is completely free.
+                No. The extension is open-source and free forever. Google AI Studio provides a free tier for Gemini models (like Gemini 3.7 Flash and 3.1 Flash-Lite) which supports hundreds of daily requests without any charge.
               </div>
             </div>
           </div>
 
           <!-- FAQ 3 -->
           <div class="faq-item">
-            <button class="faq-trigger" aria-expanded="false">
-              <span>Which Gemini model should I choose?</span>
+            <button class="faq-trigger" aria-expanded="false" type="button">
+              <span>How does multilingual translation and dialect support work?</span>
               <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
             <div class="faq-content">
               <div class="faq-content-inner">
-                We recommend <strong>Gemini 3.1 Flash-Lite</strong> for simple, rapid writing corrections, as it provides near-instant responses with low token consumption. If you need highly complex rewrites, tone adjustments, or advanced reasoning, switch to <strong>Gemini 3.5 Flash</strong> in the Settings panel.
+                TextBetter v2.0 supports dedicated regional translations (such as Brazilian Portuguese <code>pt-BR</code>, European Portuguese <code>pt-PT</code>, Mexican Spanish <code>es-MX</code>, European Spanish <code>es-ES</code>, British English <code>en-GB</code>, American English <code>en-US</code>, German, French, Japanese, etc.). You can set your default target language in Settings and customize the prompt template.
               </div>
             </div>
           </div>
 
           <!-- FAQ 4 -->
           <div class="faq-item">
-            <button class="faq-trigger" aria-expanded="false">
-              <span>Can I add custom options to the floating menu?</span>
+            <button class="faq-trigger" aria-expanded="false" type="button">
+              <span>How do I use the keyboard shortcut to trigger the assistant?</span>
               <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="6 9 12 15 18 9"></polyline>
               </svg>
             </button>
             <div class="faq-content">
               <div class="faq-content-inner">
-                You can fully customize the instructions behind each menu option (e.g. telling the professional action to write in a specific email style). Currently, the option actions themselves are pre-set, but we plan to allow user-defined actions in a future update.
+                Simply highlight any text on a web page and press <code>Ctrl+Shift+K</code> (default). You can also customize your combination (e.g. <code>Alt+Space</code> or <code>Ctrl+Shift+E</code>) directly inside the TextBetter Options page using the interactive hotkey recorder.
+              </div>
+            </div>
+          </div>
+
+          <!-- FAQ 5 -->
+          <div class="faq-item">
+            <button class="faq-trigger" aria-expanded="false" type="button">
+              <span>Can I export or clear my transformation history?</span>
+              <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+            <div class="faq-content">
+              <div class="faq-content-inner">
+                Yes. Inside the extension popup, switch to the <strong>History</strong> tab to search across past transformations, delete individual records, clear your history, or click <strong>Export CSV</strong> to download your history records instantly.
               </div>
             </div>
           </div>
@@ -457,13 +542,15 @@
     <div class="container">
       <div class="footer-bottom">
         <p>&copy; 2026 TextBetter. Licensed under the MIT License.</p>
-        <p class="footer-credits">Designed with Shadcn Zinc styling. No tracking cookies. No external analytics servers.</p>
+        <p class="footer-credits">Crafted with Shadcn Zinc design system. Zero tracking cookies. 100% private.</p>
         <div class="footer-links">
           <a href="privacy.html" class="link-underlined">Privacy Policy</a>
           <span class="bullet">&bull;</span>
-          <a href="https://github.com/klysman08/TextBetter" target="_blank" class="link-underlined">GitHub Repository</a>
+          <a href="https://github.com/klysman08/TextBetter" target="_blank" rel="noopener noreferrer" class="link-underlined">GitHub Repository</a>
           <span class="bullet">&bull;</span>
-          <a href="https://aistudio.google.com" target="_blank" class="link-underlined">Google AI Studio</a>
+          <a href="https://chromewebstore.google.com/detail/textbetter/nigpnlbglmdacafhhdhfeilbpfbokoha" target="_blank" rel="noopener noreferrer" class="link-underlined">Chrome Web Store</a>
+          <span class="bullet">&bull;</span>
+          <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" class="link-underlined">Google AI Studio</a>
         </div>
       </div>
     </div>
