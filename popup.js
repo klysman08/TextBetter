@@ -105,9 +105,14 @@ const historyCountBadge = document.getElementById("history-count-badge");
 
 // History UI elements
 const historySearchInput = document.getElementById("history-search-input");
+const exportCsvBtn = document.getElementById("export-csv-btn");
 const clearHistoryBtn = document.getElementById("clear-history-btn");
 const historyListContainer = document.getElementById("history-list");
 const historyEmptyState = document.getElementById("history-empty");
+const historyPagination = document.getElementById("history-pagination");
+const historyPrevPageBtn = document.getElementById("history-prev-page");
+const historyNextPageBtn = document.getElementById("history-next-page");
+const historyPageInfo = document.getElementById("history-page-info");
 
 // Dashboard UI elements
 const statRequests = document.getElementById("stat-requests");
@@ -122,8 +127,10 @@ const tokenRatioInput = document.getElementById("token-ratio-input");
 const tokenRatioOutput = document.getElementById("token-ratio-output");
 const chartBarsContainer = document.getElementById("chart-bars-container");
 
-// In-memory history cache
+// In-memory history cache & pagination
 let historyRecords = [];
+const HISTORY_PAGE_SIZE = 5;
+let currentHistoryPage = 1;
 
 // Web Audio API Sound Synthesiser
 let audioCtx = null;
@@ -357,7 +364,20 @@ clearStatsBtn.addEventListener("click", async () => {
 // History search input
 if (historySearchInput) {
   historySearchInput.addEventListener("input", () => {
+    currentHistoryPage = 1;
     renderHistory();
+  });
+}
+
+// Export history to CSV
+if (exportCsvBtn) {
+  exportCsvBtn.addEventListener("click", () => {
+    if (!historyRecords || historyRecords.length === 0) {
+      alert("No transformation history records available to export.");
+      return;
+    }
+    playSound("click");
+    exportHistoryToCsv(historyRecords);
   });
 }
 
@@ -368,10 +388,43 @@ if (clearHistoryBtn) {
     playSound("click");
     if (confirm("Are you sure you want to clear all transformation history?")) {
       historyRecords = [];
+      currentHistoryPage = 1;
       await chrome.storage.local.set({ history: [] });
       updateHistoryBadge();
       renderHistory();
       playSound("success");
+    }
+  });
+}
+
+// Pagination button listeners
+if (historyPrevPageBtn) {
+  historyPrevPageBtn.addEventListener("click", () => {
+    if (currentHistoryPage > 1) {
+      currentHistoryPage--;
+      renderHistory();
+      playSound("click");
+    }
+  });
+}
+
+if (historyNextPageBtn) {
+  historyNextPageBtn.addEventListener("click", () => {
+    const query = historySearchInput ? historySearchInput.value.trim().toLowerCase() : "";
+    const filteredCount = query
+      ? historyRecords.filter(item => 
+          (item.inputText && item.inputText.toLowerCase().includes(query)) ||
+          (item.outputText && item.outputText.toLowerCase().includes(query)) ||
+          (item.actionLabel && item.actionLabel.toLowerCase().includes(query)) ||
+          (item.action && item.action.toLowerCase().includes(query)) ||
+          (item.targetLanguage && item.targetLanguage.toLowerCase().includes(query))
+        ).length
+      : historyRecords.length;
+    const totalPages = Math.max(1, Math.ceil(filteredCount / HISTORY_PAGE_SIZE));
+    if (currentHistoryPage < totalPages) {
+      currentHistoryPage++;
+      renderHistory();
+      playSound("click");
     }
   });
 }
@@ -436,6 +489,7 @@ async function initializePopup() {
 
   // History cache
   historyRecords = Array.isArray(settings.history) ? settings.history : [];
+  currentHistoryPage = 1;
   updateHistoryBadge();
 
   // Render stats
@@ -468,7 +522,7 @@ function formatRelativeTime(timestamp) {
 }
 
 /**
- * Render history records with search filtering
+ * Render history records with pagination and search filtering
  */
 function renderHistory() {
   if (!historyListContainer) return;
@@ -486,6 +540,10 @@ function renderHistory() {
 
   historyListContainer.innerHTML = "";
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / HISTORY_PAGE_SIZE));
+  if (currentHistoryPage > totalPages) currentHistoryPage = totalPages;
+  if (currentHistoryPage < 1) currentHistoryPage = 1;
+
   if (filtered.length === 0) {
     historyEmptyState.classList.remove("hidden");
     if (query) {
@@ -493,12 +551,33 @@ function renderHistory() {
     } else {
       historyEmptyState.querySelector("span").textContent = "No transformations recorded yet.";
     }
+    if (historyPagination) {
+      historyPagination.classList.add("hidden");
+    }
     return;
   }
 
   historyEmptyState.classList.add("hidden");
 
-  filtered.forEach(item => {
+  // Render pagination info
+  if (historyPagination) {
+    historyPagination.classList.remove("hidden");
+    if (historyPageInfo) {
+      historyPageInfo.textContent = `Page ${currentHistoryPage} of ${totalPages}`;
+    }
+    if (historyPrevPageBtn) {
+      historyPrevPageBtn.disabled = currentHistoryPage <= 1;
+    }
+    if (historyNextPageBtn) {
+      historyNextPageBtn.disabled = currentHistoryPage >= totalPages;
+    }
+  }
+
+  // Slice records for current page
+  const startIndex = (currentHistoryPage - 1) * HISTORY_PAGE_SIZE;
+  const pageItems = filtered.slice(startIndex, startIndex + HISTORY_PAGE_SIZE);
+
+  pageItems.forEach(item => {
     const card = document.createElement("div");
     card.className = "history-card";
     card.dataset.id = item.id;
@@ -571,6 +650,23 @@ async function deleteHistoryItem(id) {
   historyRecords = historyRecords.filter(item => item.id !== id);
   await chrome.storage.local.set({ history: historyRecords });
   updateHistoryBadge();
+
+  const query = historySearchInput ? historySearchInput.value.trim().toLowerCase() : "";
+  const filteredCount = query
+    ? historyRecords.filter(item => 
+        (item.inputText && item.inputText.toLowerCase().includes(query)) ||
+        (item.outputText && item.outputText.toLowerCase().includes(query)) ||
+        (item.actionLabel && item.actionLabel.toLowerCase().includes(query)) ||
+        (item.action && item.action.toLowerCase().includes(query)) ||
+        (item.targetLanguage && item.targetLanguage.toLowerCase().includes(query))
+      ).length
+    : historyRecords.length;
+
+  const totalPages = Math.max(1, Math.ceil(filteredCount / HISTORY_PAGE_SIZE));
+  if (currentHistoryPage > totalPages) {
+    currentHistoryPage = totalPages;
+  }
+
   renderHistory();
   playSound("click");
 }
@@ -591,6 +687,67 @@ async function copyToClipboard(text, btn) {
   } catch (err) {
     console.error("Copy failed:", err);
   }
+}
+
+/**
+ * Export history records to CSV format and trigger file download
+ */
+function exportHistoryToCsv(records) {
+  if (!records || records.length === 0) return;
+
+  const headers = [
+    "ID",
+    "Timestamp (ISO)",
+    "Date",
+    "Action",
+    "Model",
+    "Target Language",
+    "Input Tokens",
+    "Output Tokens",
+    "Total Tokens",
+    "Input Text",
+    "Output Text"
+  ];
+
+  function escapeCsvCell(val) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  }
+
+  const rows = records.map(item => {
+    const d = item.timestamp ? new Date(item.timestamp) : new Date();
+    const inTok = item.tokens?.input ?? 0;
+    const outTok = item.tokens?.output ?? 0;
+    const totalTok = item.tokens?.total ?? (inTok + outTok);
+
+    return [
+      escapeCsvCell(item.id || ""),
+      escapeCsvCell(d.toISOString()),
+      escapeCsvCell(d.toLocaleString()),
+      escapeCsvCell(item.actionLabel || item.action || ""),
+      escapeCsvCell(item.model || ""),
+      escapeCsvCell(item.targetLanguage || ""),
+      escapeCsvCell(inTok),
+      escapeCsvCell(outTok),
+      escapeCsvCell(totalTok),
+      escapeCsvCell(item.inputText || ""),
+      escapeCsvCell(item.outputText || "")
+    ].join(",");
+  });
+
+  const csvContent = "\uFEFF" + [headers.join(","), ...rows].join("\r\n");
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const dateStr = new Date().toISOString().split("T")[0];
+  a.href = url;
+  a.download = `textbetter-history-${dateStr}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  playSound("success");
 }
 
 /**

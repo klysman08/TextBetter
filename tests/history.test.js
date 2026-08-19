@@ -133,4 +133,134 @@ describe("Transformation History Suite", () => {
     const resEmpty = filterHistory(list, "nonexistent term");
     assert.equal(resEmpty.length, 0);
   });
+
+  test("should paginate history records accurately with page boundaries", () => {
+    const PAGE_SIZE = 5;
+    const items = [];
+    for (let i = 1; i <= 14; i++) {
+      items.push(createMockRecord({ inputText: `Input ${i}` }));
+    }
+
+    function paginate(list, page, pageSize = PAGE_SIZE) {
+      const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+      const safePage = Math.max(1, Math.min(page, totalPages));
+      const start = (safePage - 1) * pageSize;
+      return {
+        items: list.slice(start, start + pageSize),
+        page: safePage,
+        totalPages,
+        hasPrev: safePage > 1,
+        hasNext: safePage < totalPages
+      };
+    }
+
+    // Page 1
+    const p1 = paginate(items, 1);
+    assert.equal(p1.page, 1);
+    assert.equal(p1.totalPages, 3);
+    assert.equal(p1.items.length, 5);
+    assert.equal(p1.items[0].inputText, "Input 1");
+    assert.equal(p1.items[4].inputText, "Input 5");
+    assert.equal(p1.hasPrev, false);
+    assert.equal(p1.hasNext, true);
+
+    // Page 2
+    const p2 = paginate(items, 2);
+    assert.equal(p2.page, 2);
+    assert.equal(p2.items.length, 5);
+    assert.equal(p2.items[0].inputText, "Input 6");
+    assert.equal(p2.hasPrev, true);
+    assert.equal(p2.hasNext, true);
+
+    // Page 3 (final page with remainder 4 items)
+    const p3 = paginate(items, 3);
+    assert.equal(p3.page, 3);
+    assert.equal(p3.items.length, 4);
+    assert.equal(p3.items[3].inputText, "Input 14");
+    assert.equal(p3.hasPrev, true);
+    assert.equal(p3.hasNext, false);
+
+    // Clamping on out-of-bounds page numbers
+    const pOverflow = paginate(items, 99);
+    assert.equal(pOverflow.page, 3);
+
+    const pUnderflow = paginate(items, -5);
+    assert.equal(pUnderflow.page, 1);
+
+    // Empty list pagination
+    const pEmpty = paginate([], 1);
+    assert.equal(pEmpty.items.length, 0);
+    assert.equal(pEmpty.page, 1);
+    assert.equal(pEmpty.totalPages, 1);
+    assert.equal(pEmpty.hasPrev, false);
+    assert.equal(pEmpty.hasNext, false);
+  });
+
+  test("should format history items into escaped CSV correctly", () => {
+    function generateCsv(records) {
+      const headers = [
+        "ID",
+        "Timestamp (ISO)",
+        "Date",
+        "Action",
+        "Model",
+        "Target Language",
+        "Input Tokens",
+        "Output Tokens",
+        "Total Tokens",
+        "Input Text",
+        "Output Text"
+      ];
+
+      function escapeCsvCell(val) {
+        if (val === null || val === undefined) return '""';
+        const str = String(val).replace(/"/g, '""');
+        return `"${str}"`;
+      }
+
+      const rows = records.map(item => {
+        const d = item.timestamp ? new Date(item.timestamp) : new Date();
+        const inTok = item.tokens?.input ?? 0;
+        const outTok = item.tokens?.output ?? 0;
+        const totalTok = item.tokens?.total ?? (inTok + outTok);
+
+        return [
+          escapeCsvCell(item.id || ""),
+          escapeCsvCell(d.toISOString()),
+          escapeCsvCell(d.toLocaleString()),
+          escapeCsvCell(item.actionLabel || item.action || ""),
+          escapeCsvCell(item.model || ""),
+          escapeCsvCell(item.targetLanguage || ""),
+          escapeCsvCell(inTok),
+          escapeCsvCell(outTok),
+          escapeCsvCell(totalTok),
+          escapeCsvCell(item.inputText || ""),
+          escapeCsvCell(item.outputText || "")
+        ].join(",");
+      });
+
+      return [headers.join(","), ...rows].join("\r\n");
+    }
+
+    const testRecords = [
+      createMockRecord({
+        actionType: "professional",
+        actionLabel: "Make it Professional",
+        inputText: 'Hello "world", how are you?\nNew line here.',
+        outputText: 'Dear recipient, I hope this finds you well.\nWith best regards.',
+        model: "gemini-3.7-flash",
+        targetLanguage: null,
+        usageMetadata: { promptTokenCount: 20, candidatesTokenCount: 30, totalTokenCount: 50 }
+      })
+    ];
+
+    const csv = generateCsv(testRecords);
+    const lines = csv.split("\r\n");
+    assert.equal(lines.length, 2);
+    assert.ok(lines[0].startsWith("ID,Timestamp (ISO),Date,Action,Model"));
+    // Verify escaping of quotes and preservation of commas and newlines
+    assert.ok(lines[1].includes('"Hello ""world"", how are you?\nNew line here."'));
+    assert.ok(lines[1].includes('"Make it Professional"'));
+    assert.ok(lines[1].includes('"20","30","50"'));
+  });
 });

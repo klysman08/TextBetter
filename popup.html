@@ -682,6 +682,46 @@
       gap: 0.5rem;
     }
 
+    /* History Pagination Controls */
+    .history-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 0.75rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid hsl(var(--border));
+    }
+
+    .history-page-btn {
+      background: none;
+      border: 1px solid hsl(var(--border));
+      border-radius: var(--radius-sm);
+      color: hsl(var(--foreground));
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .history-page-btn:hover:not(:disabled) {
+      background-color: hsl(var(--accent));
+      border-color: hsl(var(--foreground)/0.3);
+    }
+
+    .history-page-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .history-page-info {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: hsl(var(--muted-foreground));
+    }
+
     /* Footer */
     .footer {
       margin-top: 1rem;
@@ -728,7 +768,7 @@
         </span>
         <span class="moon-icon">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 3a6 6 0 0 0 9 9 9 0 1 1-9-9Z"/>
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
           </svg>
           Dark
         </span>
@@ -887,6 +927,14 @@
     <div id="view-history" class="tab-view hidden">
       <div class="history-header-actions">
         <input type="text" id="history-search-input" class="history-search-input" placeholder="Search inputs, outputs...">
+        <button id="export-csv-btn" class="clear-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.2rem; font-size: 0.68rem;" title="Export history to CSV" type="button">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export
+        </button>
         <button id="clear-history-btn" class="clear-btn" type="button">Clear All</button>
       </div>
 
@@ -900,6 +948,21 @@
           <polyline points="12 6 12 12 14 14"></polyline>
         </svg>
         <span>No transformations recorded yet.</span>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div id="history-pagination" class="history-pagination">
+        <button id="history-prev-page" class="history-page-btn" title="Previous page" disabled type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <span id="history-page-info" class="history-page-info">Page 1 of 1</span>
+        <button id="history-next-page" class="history-page-btn" title="Next page" disabled type="button">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       </div>
     </div>
   </main>

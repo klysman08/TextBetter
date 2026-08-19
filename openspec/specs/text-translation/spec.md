@@ -5,15 +5,19 @@ Provides seamless in-place text translation with user-configurable target langua
 ## Requirements
 
 ### Requirement: Target Language Configuration
-The settings interface SHALL provide a target language selector allowing users to configure their preferred translation destination language (e.g., English, Spanish, Portuguese, French, German, Italian, Japanese, Chinese, etc.).
+The settings interface and popup SHALL provide a target language selector allowing users to configure their preferred translation destination language, supporting regional variants including English (US), English (GB), Portuguese (PT), Portuguese (BR), Spanish, French, German, Italian, Japanese, Chinese (Simplified/Traditional), Korean, Russian, Arabic, Dutch, Hindi, Turkish, Polish, Swedish, and Indonesian.
 
 #### Scenario: User changes target language
 - **WHEN** user selects "Spanish" as the target translation language in settings and saves
 - **THEN** extension storage SHALL record `targetLanguage: "Spanish"`
 
 #### Scenario: Default target language
-- **WHEN** no target language is set by the user
-- **THEN** the extension SHALL default to "English" (or user's browser language)
+- **WHEN** no target language is set by the user or an existing setting contains legacy "English" or "Portuguese"
+- **THEN** the extension SHALL default to "English" and preserve valid selections gracefully
+
+#### Scenario: User selects regional language variant
+- **WHEN** user selects "English (GB)" or "Portuguese (BR)" as the target translation language in options or popup
+- **THEN** extension storage SHALL record the selected value and translation prompts SHALL instruct Gemini to translate specifically into that regional dialect
 
 ### Requirement: Quick In-Place Translation Action
 The floating assistant toolbar SHALL provide a "Translate" action button that translates the currently selected sentence or paragraph into the configured target language.
