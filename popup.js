@@ -9,7 +9,7 @@ if (typeof chrome === "undefined" || !chrome.storage) {
       theme: "dark",
       muted: false,
       apiKey: "AIzaSyMockKeyForLocalPreviews",
-      selectedModel: "gemini-3.5-flash",
+      selectedModel: "gemini-3.7-flash",
       stats: {
         totalRequests: 24,
         inputTokens: 1480,
@@ -21,7 +21,11 @@ if (typeof chrome === "undefined" || !chrome.storage) {
           appealing: 2,
           emojis: 1,
           detail: 0,
-          shorten: 0
+          shorten: 0,
+          summarize: 0,
+          simplify: 0,
+          friendly: 0,
+          translate: 0
         }
       }
     }));
@@ -61,7 +65,8 @@ if (typeof chrome === "undefined" || !chrome.storage) {
 const extensionToggle = document.getElementById("extension-toggle");
 const autoOpenToggle = document.getElementById("auto-open-toggle");
 const apiStatusBadge = document.getElementById("api-status-badge");
-const activeModelName = document.getElementById("active-model-name");
+const popupModelSelect = document.getElementById("popup-model-select");
+const popupLanguageSelect = document.getElementById("popup-language-select");
 const openSettingsBtn = document.getElementById("open-settings-btn");
 const themeToggleBtn = document.getElementById("popup-theme-toggle");
 const soundToggleBtn = document.getElementById("popup-sound-toggle");
@@ -207,6 +212,24 @@ autoOpenToggle.addEventListener("change", async (e) => {
   playSound(isAutoOpen ? "toggle-on" : "toggle-off");
 });
 
+// Model selector handler
+if (popupModelSelect) {
+  popupModelSelect.addEventListener("change", async (e) => {
+    const selectedModel = e.target.value;
+    await chrome.storage.local.set({ selectedModel });
+    playSound("click");
+  });
+}
+
+// Language selector handler
+if (popupLanguageSelect) {
+  popupLanguageSelect.addEventListener("change", async (e) => {
+    const targetLanguage = e.target.value;
+    await chrome.storage.local.set({ targetLanguage });
+    playSound("click");
+  });
+}
+
 // Theme Toggle handler
 themeToggleBtn.addEventListener("click", async () => {
   const isDark = document.documentElement.classList.toggle("dark");
@@ -250,7 +273,11 @@ clearStatsBtn.addEventListener("click", async () => {
         appealing: 0,
         emojis: 0,
         detail: 0,
-        shorten: 0
+        shorten: 0,
+        summarize: 0,
+        simplify: 0,
+        friendly: 0,
+        translate: 0
       }
     };
     await chrome.storage.local.set({ stats: emptyStats });
@@ -263,11 +290,23 @@ clearStatsBtn.addEventListener("click", async () => {
  * Initialize popup state
  */
 async function initializePopup() {
-  const settings = await chrome.storage.local.get(["apiKey", "selectedModel", "enabled", "theme", "stats", "muted", "autoOpen"]);
+  const settings = await chrome.storage.local.get([
+    "apiKey", "selectedModel", "targetLanguage", "enabled", "theme", "stats", "muted", "autoOpen"
+  ]);
 
   // Set Enable/Disable switches
   extensionToggle.checked = settings.enabled !== false; // Default to true if undefined
   autoOpenToggle.checked = settings.autoOpen !== false; // Default to true if undefined
+
+  // Set Model dropdown
+  if (popupModelSelect) {
+    popupModelSelect.value = settings.selectedModel || "gemini-3.7-flash";
+  }
+
+  // Set Language dropdown
+  if (popupLanguageSelect) {
+    popupLanguageSelect.value = settings.targetLanguage || "English";
+  }
 
   // Set Theme
   let theme = settings.theme;
@@ -289,9 +328,6 @@ async function initializePopup() {
   } else {
     document.documentElement.classList.remove("muted");
   }
-
-  // Set Model text
-  activeModelName.textContent = settings.selectedModel || "gemini-3.5-flash";
 
   // Set API Key status badge
   if (settings.apiKey) {
@@ -356,7 +392,11 @@ function displayStats(stats) {
     appealing: "Appealing",
     emojis: "Add Emojis",
     detail: "Detail It",
-    shorten: "Shorten Text"
+    shorten: "Shorten Text",
+    summarize: "Summarize",
+    simplify: "Simplify",
+    friendly: "Friendly Tone",
+    translate: "Translate"
   };
 
   // Find top action and gather active ones for the breakdown chart

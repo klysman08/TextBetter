@@ -29,8 +29,8 @@ async function handleGenerateText(request) {
   // Retrieve API settings from storage
   const settings = await chrome.storage.local.get(["apiKey", "selectedModel"]);
   const apiKey = settings.apiKey;
-  // Default to gemini-3.5-flash
-  const model = settings.selectedModel || "gemini-3.5-flash";
+  // Default to gemini-3.7-flash
+  const model = settings.selectedModel || "gemini-3.7-flash";
 
   if (!apiKey) {
     throw new Error("API Key is missing. Please configure your API key in the extension settings.");
@@ -126,7 +126,11 @@ async function updateUsageStats(actionType, inputChars, outputText, usageMetadat
           appealing: 0,
           emojis: 0,
           detail: 0,
-          shorten: 0
+          shorten: 0,
+          summarize: 0,
+          simplify: 0,
+          friendly: 0,
+          translate: 0
         }
       };
     }
