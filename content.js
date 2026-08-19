@@ -21,10 +21,22 @@
   let iconPosition = "above";
   let hotkey = "";
   let targetLanguage = "English";
+  let isMuted = false;
 
   // Shadow DOM container
   let container = null;
   let shadowRoot = null;
+
+  /**
+   * Check if extension context is valid
+   */
+  function isExtensionValid() {
+    try {
+      return typeof chrome !== "undefined" && !!chrome.runtime && !!chrome.runtime.id;
+    } catch (e) {
+      return false;
+    }
+  }
 
   // Default prompts for TextBetter (used as robust prompt-engineering fallbacks)
   const DEFAULT_PROMPTS = {
@@ -59,9 +71,8 @@
   /**
    * Sound engine for playing UI feedback effects
    */
-  async function playSound(type) {
-    const settings = await chrome.storage.local.get("muted");
-    if (settings.muted) return;
+  function playSound(type) {
+    if (isMuted) return;
 
     try {
       initAudioContext();
@@ -131,74 +142,88 @@
   init();
 
   async function init() {
-    // Load state and prompts
-    const promptKeys = Object.keys(DEFAULT_PROMPTS).map(k => `prompt_${k}`);
-    const settings = await chrome.storage.local.get([
-      "enabled", "theme", "selectedModel",
-      "autoOpen", "iconPosition", "hotkey", "targetLanguage",
-      ...promptKeys
-    ]);
+    if (!isExtensionValid()) return;
 
-    isEnabled = settings.enabled !== false;
-    currentTheme = settings.theme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    autoOpen = settings.autoOpen !== false;
-    iconPosition = settings.iconPosition || "above";
-    hotkey = settings.hotkey || "";
-    targetLanguage = settings.targetLanguage || "English";
-    
-    // Cache prompts with robust defaults
-    prompts = {};
-    Object.keys(DEFAULT_PROMPTS).forEach(k => {
-      const custom = settings[`prompt_${k}`];
-      prompts[k] = (custom && custom.includes("CRITICAL:")) ? custom : DEFAULT_PROMPTS[k];
-    });
+    try {
+      // Load state and prompts
+      const promptKeys = Object.keys(DEFAULT_PROMPTS).map(k => `prompt_${k}`);
+      const settings = await chrome.storage.local.get([
+        "enabled", "theme", "selectedModel",
+        "autoOpen", "iconPosition", "hotkey", "targetLanguage", "muted",
+        ...promptKeys
+      ]);
 
-    if (!isEnabled) return;
-
-    // Build the Shadow DOM UI container
-    createShadowContainer();
-
-    // Listen for window-level mouse/key events to capture text selections
-    document.addEventListener("mouseup", handleSelectionChange);
-    document.addEventListener("keyup", handleSelectionChange);
-    document.addEventListener("keydown", handleHotkeyPress);
-    
-    // Listen for clicks outside to dismiss floating menus
-    document.addEventListener("mousedown", handleDocumentClick);
-
-    // Listen to changes in settings from Options/Popup
-    chrome.storage.onChanged.addListener((changes) => {
-      if (changes.enabled) {
-        isEnabled = changes.enabled.newValue;
-        if (!isEnabled) {
-          destroyShadowContainer();
-        } else {
-          createShadowContainer();
-        }
-      }
-      if (changes.theme && container) {
-        currentTheme = changes.theme.newValue;
-        updateThemeClass();
-      }
-      if (changes.autoOpen) {
-        autoOpen = changes.autoOpen.newValue !== false;
-      }
-      if (changes.iconPosition) {
-        iconPosition = changes.iconPosition.newValue || "above";
-      }
-      if (changes.hotkey) {
-        hotkey = changes.hotkey.newValue || "";
-      }
-      if (changes.targetLanguage) {
-        targetLanguage = changes.targetLanguage.newValue || "English";
-      }
-      // Update prompts if modified
-      Object.keys(DEFAULT_PROMPTS).forEach(key => {
-        if (changes[`prompt_${key}`]) {
-          prompts[key] = changes[`prompt_${key}`].newValue;
-        }
+      isEnabled = settings.enabled !== false;
+      currentTheme = settings.theme || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      autoOpen = settings.autoOpen !== false;
+      iconPosition = settings.iconPosition || "above";
+      hotkey = settings.hotkey || "";
+      targetLanguage = settings.targetLanguage || "English";
+      isMuted = settings.muted === true;
+      
+      // Cache prompts with robust defaults
+      prompts = {};
+      Object.keys(DEFAULT_PROMPTS).forEach(k => {
+        const custom = settings[`prompt_${k}`];
+        prompts[k] = (custom && custom.includes("CRITICAL:")) ? custom : DEFAULT_PROMPTS[k];
       });
-    });
+
+      if (!isEnabled) return;
+
+      // Build the Shadow DOM UI container
+      createShadowContainer();
+
+      // Listen for window-level mouse/key/selection events to capture text selections
+      document.addEventListener("mouseup", handleSelectionChange);
+      document.addEventListener("keyup", handleSelectionChange);
+      document.addEventListener("selectionchange", handleSelectionChange);
+      document.addEventListener("select", handleSelectionChange, true);
+      document.addEventListener("keydown", handleHotkeyPress);
+      
+      // Listen for clicks outside to dismiss floating menus
+      document.addEventListener("mousedown", handleDocumentClick);
+
+      // Listen to changes in settings from Options/Popup
+      chrome.storage.onChanged.addListener((changes) => {
+        if (!isExtensionValid()) return;
+
+        if (changes.enabled) {
+          isEnabled = changes.enabled.newValue;
+          if (!isEnabled) {
+            destroyShadowContainer();
+          } else {
+            createShadowContainer();
+          }
+        }
+        if (changes.theme && container) {
+          currentTheme = changes.theme.newValue;
+          updateThemeClass();
+        }
+        if (changes.autoOpen) {
+          autoOpen = changes.autoOpen.newValue !== false;
+        }
+        if (changes.iconPosition) {
+          iconPosition = changes.iconPosition.newValue || "above";
+        }
+        if (changes.hotkey) {
+          hotkey = changes.hotkey.newValue || "";
+        }
+        if (changes.targetLanguage) {
+          targetLanguage = changes.targetLanguage.newValue || "English";
+        }
+        if (changes.muted) {
+          isMuted = changes.muted.newValue === true;
+        }
+        // Update prompts if modified
+        Object.keys(DEFAULT_PROMPTS).forEach(key => {
+          if (changes[`prompt_${key}`]) {
+            prompts[key] = changes[`prompt_${key}`].newValue;
+          }
+        });
+      });
+    } catch (err) {
+      console.warn("TextBetter init error:", err);
+    }
   }
 
   function updateThemeClass() {
@@ -716,6 +741,10 @@
     
     // Prevent selections on page from resetting when clicking inside the Shadow DOM UI
     shadowRootEl.querySelector(".tb-root").addEventListener("mousedown", (e) => {
+      // Do not prevent default inside the editable result box so user can edit results
+      if (e.target && (e.target.id === "tb-result-content" || e.target.closest("#tb-result-content"))) {
+        return;
+      }
       e.preventDefault();
       e.stopPropagation();
     });
@@ -783,6 +812,43 @@
   }
 
   /**
+   * Helper to find deepest active element across nested Shadow DOMs
+   */
+  function getDeepActiveElement() {
+    let el = document.activeElement;
+    while (el && el.shadowRoot && el.shadowRoot.activeElement) {
+      el = el.shadowRoot.activeElement;
+    }
+    return el;
+  }
+
+  /**
+   * Helper to find editable container (Teams, Slack, ProseMirror, Lexical, DraftJS, CKEditor, contenteditable)
+   */
+  function findEditableHost(node) {
+    if (!node) return null;
+    let el = node.nodeType === Node.ELEMENT_NODE ? node : node.parentElement;
+    while (el && el !== document.body && el !== document.documentElement) {
+      if (
+        el.isContentEditable ||
+        el.getAttribute("contenteditable") === "true" ||
+        el.getAttribute("role") === "textbox" ||
+        el.getAttribute("role") === "combobox" ||
+        el.classList.contains("ProseMirror") ||
+        el.classList.contains("draftjs-editor") ||
+        el.hasAttribute("data-slate-editor") ||
+        el.hasAttribute("data-lexical-editor") ||
+        el.getAttribute("data-tid") === "ckeditor-div" ||
+        el.getAttribute("data-tid") === "chat-input-body"
+      ) {
+        return el;
+      }
+      el = el.parentElement;
+    }
+    return null;
+  }
+
+  /**
    * Monitor user selection
    */
   function handleSelectionChange() {
@@ -798,7 +864,7 @@
     
     // Delay selection grab slightly to let selection finish drawing
     setTimeout(() => {
-      const activeEl = document.activeElement;
+      const activeEl = getDeepActiveElement();
       let text = "";
       let isInput = false;
 
@@ -806,26 +872,31 @@
       if (activeEl && (activeEl.tagName === "INPUT" || activeEl.tagName === "TEXTAREA")) {
         const start = activeEl.selectionStart;
         const end = activeEl.selectionEnd;
-        if (start !== null && end !== null && start !== end) {
-          text = activeEl.value.substring(start, end).trim();
-          isInput = true;
-          inputStart = start;
-          inputEnd = end;
-          activeElement = activeEl;
+        if (typeof start === "number" && typeof end === "number" && start !== end) {
+          text = activeEl.value.substring(start, end);
+          if (text.trim().length > 0) {
+            isInput = true;
+            inputStart = start;
+            inputEnd = end;
+            activeElement = activeEl;
+          }
         }
       } else {
-        // Selection outside inputs (e.g. static text, contenteditable)
+        // Selection in DOM / contenteditable / Teams / Slack / etc.
         const selection = window.getSelection();
-        if (selection.rangeCount > 0) {
-          text = selection.toString().trim();
-          activeSelectionRange = selection.getRangeAt(0).cloneRange();
-          isInput = false;
-          activeElement = activeEl;
+        if (selection && selection.rangeCount > 0 && !selection.isCollapsed) {
+          const selText = selection.toString();
+          if (selText.trim().length > 0) {
+            text = selText;
+            activeSelectionRange = selection.getRangeAt(0).cloneRange();
+            isInput = false;
+            activeElement = activeEl || selection.anchorNode?.parentElement;
+          }
         }
       }
 
-      if (text.length > 0) {
-        activeSelectionText = text;
+      if (text.trim().length > 0) {
+        activeSelectionText = text.trim();
         isInputSelection = isInput;
         
         // Render trigger button close to selection only if autoOpen is enabled
@@ -906,17 +977,21 @@
 
     // Calculate vertical/horizontal coordinates
     // Float slightly above or below selection depending on settings
-    let top;
-    if (iconPosition === "below") {
-      top = rect.bottom + 8 + window.scrollY;
-    } else {
-      top = rect.top - 36 + window.scrollY;
-    }
-    const left = rect.left + (rect.width / 2) - 14 + window.scrollX;
+    const scrollY = (typeof window !== "undefined" && (window.scrollY || window.pageYOffset)) || 0;
+    const scrollX = (typeof window !== "undefined" && (window.scrollX || window.pageXOffset)) || 0;
 
-    // Constrain position within viewport
-    const safeTop = Math.max(8, top);
-    const safeLeft = Math.max(8, Math.min(window.innerWidth - 36, left));
+    const bTop = typeof rect.top === "number" ? rect.top : 0;
+    const bBottom = typeof rect.bottom === "number" ? rect.bottom : bTop;
+    const bLeft = typeof rect.left === "number" ? rect.left : 0;
+    const bWidth = typeof rect.width === "number" ? rect.width : 0;
+
+    let top = (iconPosition === "below" ? bBottom + 8 : bTop - 36) + scrollY;
+    let left = bLeft + (bWidth / 2) - 14 + scrollX;
+
+    // Constrain position within viewport and protect against NaN
+    const safeTop = Number.isFinite(top) ? Math.max(8, top) : 8;
+    const maxLeft = typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 36 : 400;
+    const safeLeft = Number.isFinite(left) ? Math.max(8, Math.min(maxLeft, left)) : 8;
 
     triggerBtn.style.top = `${safeTop}px`;
     triggerBtn.style.left = `${safeLeft}px`;
@@ -948,17 +1023,21 @@
     }
 
     // Position main card centered above or below the selection depending on settings
-    let top;
-    if (iconPosition === "below") {
-      top = rect.bottom + 8 + window.scrollY;
-    } else {
-      top = rect.top - 290 + window.scrollY; // Estimate height for 11 options
-    }
-    const left = rect.left + (rect.width / 2) - 164 + window.scrollX;
+    const scrollY = (typeof window !== "undefined" && (window.scrollY || window.pageYOffset)) || 0;
+    const scrollX = (typeof window !== "undefined" && (window.scrollX || window.pageXOffset)) || 0;
 
-    // Safety checks
-    const safeTop = Math.max(8, top);
-    const safeLeft = Math.max(8, Math.min(window.innerWidth - 336, left));
+    const bTop = typeof rect.top === "number" ? rect.top : 0;
+    const bBottom = typeof rect.bottom === "number" ? rect.bottom : bTop;
+    const bLeft = typeof rect.left === "number" ? rect.left : 0;
+    const bWidth = typeof rect.width === "number" ? rect.width : 0;
+
+    let top = (iconPosition === "below" ? bBottom + 8 : bTop - 290) + scrollY;
+    let left = bLeft + (bWidth / 2) - 164 + scrollX;
+
+    // Safety checks against NaN and screen bounds
+    const safeTop = Number.isFinite(top) ? Math.max(8, top) : 8;
+    const maxLeft = typeof window !== "undefined" && window.innerWidth ? window.innerWidth - 336 : 400;
+    const safeLeft = Number.isFinite(left) ? Math.max(8, Math.min(maxLeft, left)) : 8;
 
     mainCard.style.top = `${safeTop}px`;
     mainCard.style.left = `${safeLeft}px`;
@@ -1005,29 +1084,46 @@
       systemPrompt = systemPrompt.replace(/\{targetLanguage\}/g, targetLanguage || "English");
     }
 
-    chrome.runtime.sendMessage(
-      {
-        action: "generateText",
-        prompt: activeSelectionText,
-        systemInstruction: systemPrompt,
-        actionType: action
-      },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          playSound("error");
-          renderError(`Runtime Error: ${chrome.runtime.lastError.message}`);
-          return;
-        }
+    if (!isExtensionValid()) {
+      playSound("error");
+      renderError("The TextBetter extension was reloaded or updated. Please refresh this page to reconnect.");
+      return;
+    }
 
-        if (response && response.success) {
-          playSound("success");
-          renderResult(response.text, true);
-        } else {
-          playSound("error");
-          renderError(response?.error || "Unknown completion error.", response?.status);
+    try {
+      chrome.runtime.sendMessage(
+        {
+          action: "generateText",
+          prompt: activeSelectionText,
+          systemInstruction: systemPrompt,
+          actionType: action
+        },
+        (response) => {
+          if (!isExtensionValid()) return;
+
+          if (chrome.runtime.lastError) {
+            playSound("error");
+            renderError(`Runtime Error: ${chrome.runtime.lastError.message}`);
+            return;
+          }
+
+          if (response && response.success) {
+            playSound("success");
+            renderResult(response.text, true);
+          } else {
+            playSound("error");
+            renderError(response?.error || "Unknown completion error.", response?.status);
+          }
         }
+      );
+    } catch (err) {
+      playSound("error");
+      if (err.message && err.message.includes("Extension context invalidated")) {
+        renderError("The TextBetter extension was reloaded or updated. Please refresh this page to reconnect.");
+      } else {
+        renderError(`Communication Error: ${err.message}`);
       }
-    );
+    }
   }
 
   /**
@@ -1111,7 +1207,7 @@
   }
 
   /**
-   * Inject rewritten text back into active fields with multi-tier fallback
+   * Inject rewritten text back into active fields with universal multi-tier fallback
    */
   function handleInsert() {
     if (!shadowRoot) return;
@@ -1127,21 +1223,37 @@
           activeElement.setSelectionRange(inputStart, inputEnd);
         }
 
-        // Strategy 1: document.execCommand('insertText') for undo stack and native event triggers
+        // 1. Dispatch beforeinput for modern framework listeners
+        try {
+          activeElement.dispatchEvent(new InputEvent("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            inputType: "insertReplacementText",
+            data: newText
+          }));
+        } catch (e) {}
+
+        // 2. Strategy 1: document.execCommand('insertText') for undo stack and native event triggers
         try {
           replaced = document.execCommand("insertText", false, newText);
         } catch (cmdErr) {
           replaced = false;
         }
 
-        // Check if value actually updated with newText
+        // 3. Check if value actually updated with newText
         const curVal = activeElement.value || "";
         const expectedSubstring = curVal.substring(inputStart, inputStart + newText.length);
         if (!replaced || expectedSubstring !== newText) {
           // Strategy 2: setRangeText API if supported
           if (typeof activeElement.setRangeText === "function") {
-            activeElement.setRangeText(newText, inputStart, inputEnd, "select");
-          } else {
+            try {
+              activeElement.setRangeText(newText, inputStart, inputEnd, "select");
+              replaced = true;
+            } catch (e) {}
+          }
+
+          if (!replaced || activeElement.value.substring(inputStart, inputStart + newText.length) !== newText) {
             // Strategy 3: Native prototype value descriptor setter for React/Vue/Angular controlled inputs
             const fullNewVal = curVal.substring(0, inputStart) + newText + curVal.substring(inputEnd);
             const proto = activeElement.tagName === "TEXTAREA"
@@ -1155,61 +1267,131 @@
             }
           }
 
-          // Dispatch synthetic input and change events with bubbling and composition
-          try {
-            activeElement.dispatchEvent(new InputEvent("input", {
-              bubbles: true,
-              cancelable: true,
-              composed: true,
-              inputType: "insertReplacementText",
-              data: newText
-            }));
-          } catch (evtErr) {
-            activeElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
-          }
-          activeElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
-
           // Reset selection range to the new text
           if (typeof activeElement.setSelectionRange === "function") {
-            activeElement.setSelectionRange(inputStart, inputStart + newText.length);
+            activeElement.setSelectionRange(inputStart + newText.length, inputStart + newText.length);
           }
           replaced = true;
         }
+
+        // Dispatch synthetic input and change events with bubbling and composition
+        try {
+          activeElement.dispatchEvent(new InputEvent("input", {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            inputType: "insertReplacementText",
+            data: newText
+          }));
+        } catch (evtErr) {
+          activeElement.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+        }
+        activeElement.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+
         playSound("success");
       } catch (e) {
         console.error("Failed input replacement fallback:", e);
       }
-    } else if (activeSelectionRange) {
+    } else if (activeSelectionRange || activeElement) {
       try {
-        const sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(activeSelectionRange);
+        // Target host (Teams, Slack, Lexical, DraftJS, ProseMirror, CKEditor, contenteditable)
+        const hostEl = findEditableHost(activeElement) || 
+                       findEditableHost(activeSelectionRange?.commonAncestorContainer) || 
+                       activeElement;
 
-        // Strategy 1: execCommand insertText
+        if (hostEl && typeof hostEl.focus === "function") {
+          hostEl.focus();
+        }
+
+        const sel = window.getSelection();
+        if (activeSelectionRange && sel) {
+          sel.removeAllRanges();
+          sel.addRange(activeSelectionRange);
+        }
+
+        // Strategy 1: Dispatch beforeinput event
+        try {
+          const beforeInputEvt = new InputEvent("beforeinput", {
+            bubbles: true,
+            cancelable: true,
+            composed: true,
+            inputType: "insertText",
+            data: newText
+          });
+          (hostEl || document.activeElement).dispatchEvent(beforeInputEvt);
+        } catch (e) {}
+
+        // Strategy 2: execCommand insertText
         try {
           replaced = document.execCommand("insertText", false, newText);
         } catch (cmdErr) {
           replaced = false;
         }
 
+        // Strategy 3: Simulated Clipboard paste event with DataTransfer (for Teams, Slack, Lexical)
         if (!replaced) {
-          // Strategy 2: DOM Range manipulation
+          try {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.setData("text/plain", newText);
+            dataTransfer.setData("text/html", newText.replace(/\n/g, "<br>"));
+            const pasteEvt = new ClipboardEvent("paste", {
+              bubbles: true,
+              cancelable: true,
+              composed: true,
+              clipboardData: dataTransfer
+            });
+            const notPrevented = (hostEl || document.activeElement).dispatchEvent(pasteEvt);
+            if (!notPrevented) {
+              replaced = true;
+            }
+          } catch (e) {}
+        }
+
+        // Strategy 4: execCommand insertHTML
+        if (!replaced) {
+          try {
+            const safeHtml = newText.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+            replaced = document.execCommand("insertHTML", false, safeHtml);
+          } catch (e) {}
+        }
+
+        // Strategy 5: Direct DOM Range replacement as ultimate fallback
+        if (!replaced && activeSelectionRange) {
           activeSelectionRange.deleteContents();
           const textNode = document.createTextNode(newText);
           activeSelectionRange.insertNode(textNode);
 
-          // Highlight new text
+          // Highlight / place cursor after new text
           const newRange = document.createRange();
-          newRange.selectNodeContents(textNode);
+          newRange.setStartAfter(textNode);
+          newRange.collapse(true);
           sel.removeAllRanges();
           sel.addRange(newRange);
           
-          // Update active selection range reference
           activeSelectionRange = newRange.cloneRange();
+          replaced = true;
         }
+
+        // Always dispatch input and change events on the host editor
+        const target = hostEl || document.activeElement;
+        if (target) {
+          try {
+            target.dispatchEvent(new InputEvent("input", {
+              bubbles: true,
+              cancelable: true,
+              composed: true,
+              inputType: "insertText",
+              data: newText
+            }));
+          } catch (e) {
+            target.dispatchEvent(new Event("input", { bubbles: true, composed: true }));
+          }
+          target.dispatchEvent(new Event("change", { bubbles: true, composed: true }));
+        }
+
         playSound("success");
       } catch (e) {
-        console.error("Failed Selection replacement fallback:", e);
+        console.error("Failed rich editor / selection replacement fallback:", e);
       }
     }
 
