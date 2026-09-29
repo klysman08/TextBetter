@@ -277,6 +277,10 @@ label {
   100% { transform: rotate(360deg); }
 }
 
+.refresh-icon.spinning {
+  animation: rotation 1s linear infinite;
+}
+
 .hidden {
   display: none !important;
 }

@@ -91,10 +91,109 @@ const extensionToggle = document.getElementById("extension-toggle");
 const autoOpenToggle = document.getElementById("auto-open-toggle");
 const apiStatusBadge = document.getElementById("api-status-badge");
 const popupModelSelect = document.getElementById("popup-model-select");
+const popupRefreshModelsBtn = document.getElementById("popup-refresh-models-btn");
 const popupLanguageSelect = document.getElementById("popup-language-select");
 const openSettingsBtn = document.getElementById("open-settings-btn");
 const themeToggleBtn = document.getElementById("popup-theme-toggle");
 const soundToggleBtn = document.getElementById("popup-sound-toggle");
+
+// Fallback Gemini models (text generation models version >= 3)
+const DEFAULT_MODELS = [
+  { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Recommended)" },
+  { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite (Fastest)" },
+  { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" }
+];
+
+/**
+ * Validate that a model is for text and has version >= 3
+ */
+function isEligibleTextModel(id = "", displayName = "", description = "") {
+  const combined = `${id} ${displayName} ${description}`.toLowerCase();
+  
+  // Strictly exclude non-text, TTS (Text-to-Speech), speech, audio, video, image generation, or banana models
+  const excludedKeywords = [
+    "tts",
+    "speech",
+    "text-to-speech",
+    "audio",
+    "voice",
+    "sound",
+    "banana",
+    "image",
+    "imagen",
+    "video",
+    "live",
+    "realtime",
+    "embedding",
+    "aqa",
+    "diffusion",
+    "robotics"
+  ];
+  if (excludedKeywords.some(keyword => combined.includes(keyword))) {
+    return false;
+  }
+
+  // Must be a Gemini model
+  if (!combined.includes("gemini")) {
+    return false;
+  }
+
+  // Must have version >= 3
+  const versionMatch = combined.match(/gemini[/-]?(\d+(?:\.\d+)?)/i);
+  if (!versionMatch) {
+    return false;
+  }
+
+  const versionNum = parseFloat(versionMatch[1]);
+  return !isNaN(versionNum) && versionNum >= 3.0;
+}
+
+/**
+ * Populate the popup model dropdown dynamically
+ */
+function populatePopupModelDropdown(models, selectedValue) {
+  if (!popupModelSelect) return;
+  const filtered = (Array.isArray(models) && models.length > 0)
+    ? models.filter(m => isEligibleTextModel(m.id, m.name, m.description))
+    : DEFAULT_MODELS;
+  const list = filtered.length > 0 ? filtered : DEFAULT_MODELS;
+  const defaultFallback = list[0]?.id || "gemini-3.7-flash";
+
+  let currentVal = selectedValue || popupModelSelect.value || defaultFallback;
+  if (!isEligibleTextModel(currentVal)) {
+    currentVal = defaultFallback;
+    chrome.storage.local.set({ selectedModel: currentVal });
+  }
+
+  popupModelSelect.innerHTML = "";
+
+  let found = false;
+  list.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = m.name;
+    if (m.description) {
+      opt.title = m.description;
+    }
+    if (m.id === currentVal) {
+      opt.selected = true;
+      found = true;
+    }
+    popupModelSelect.appendChild(opt);
+  });
+
+  // Preserve custom model ONLY if it is an eligible text model with version >= 3
+  if (!found && currentVal && isEligibleTextModel(currentVal)) {
+    const customOpt = document.createElement("option");
+    customOpt.value = currentVal;
+    customOpt.textContent = `${currentVal} (Selected)`;
+    customOpt.selected = true;
+    popupModelSelect.appendChild(customOpt);
+  } else if (!found && popupModelSelect.options.length > 0) {
+    popupModelSelect.options[0].selected = true;
+    chrome.storage.local.set({ selectedModel: popupModelSelect.options[0].value });
+  }
+}
 
 // Tabs & Navigation
 const tabBtnDashboard = document.getElementById("tab-btn-dashboard");
@@ -297,6 +396,45 @@ if (popupModelSelect) {
   });
 }
 
+// Model refresh button handler
+if (popupRefreshModelsBtn) {
+  popupRefreshModelsBtn.addEventListener("click", () => {
+    playSound("click");
+    const icon = popupRefreshModelsBtn.querySelector(".popup-refresh-icon");
+    popupRefreshModelsBtn.disabled = true;
+    if (icon) icon.classList.add("spinning");
+
+    chrome.runtime.sendMessage({ action: "fetchAvailableModels" }, (response) => {
+      popupRefreshModelsBtn.disabled = false;
+      if (icon) icon.classList.remove("spinning");
+
+      if (chrome.runtime.lastError || !response?.success) {
+        playSound("error");
+        const errMsg = response?.error || chrome.runtime.lastError?.message || "Failed to fetch models.";
+        alert(errMsg);
+        return;
+      }
+
+      if (response && response.models) {
+        playSound("success");
+        populatePopupModelDropdown(response.models, popupModelSelect?.value);
+      }
+    });
+  });
+}
+
+// Storage sync listener for models and settings
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local") {
+    if (changes.availableModels) {
+      populatePopupModelDropdown(changes.availableModels.newValue, popupModelSelect?.value);
+    }
+    if (changes.selectedModel && popupModelSelect) {
+      popupModelSelect.value = changes.selectedModel.newValue;
+    }
+  }
+});
+
 // Language selector handler
 if (popupLanguageSelect) {
   popupLanguageSelect.addEventListener("change", async (e) => {
@@ -434,7 +572,7 @@ if (historyNextPageBtn) {
  */
 async function initializePopup() {
   const settings = await chrome.storage.local.get([
-    "apiKey", "selectedModel", "targetLanguage", "enabled", "theme", "stats", "muted", "autoOpen", "history"
+    "apiKey", "selectedModel", "availableModels", "targetLanguage", "enabled", "theme", "stats", "muted", "autoOpen", "history"
   ]);
 
   // Set Enable/Disable switches
@@ -443,7 +581,7 @@ async function initializePopup() {
 
   // Set Model dropdown
   if (popupModelSelect) {
-    popupModelSelect.value = settings.selectedModel || "gemini-3.7-flash";
+    populatePopupModelDropdown(settings.availableModels, settings.selectedModel || "gemini-3.7-flash");
   }
 
   // Set Language dropdown with normalization

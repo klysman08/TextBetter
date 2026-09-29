@@ -59,12 +59,186 @@ const DEFAULT_PROMPTS = {
 const apiKeyInput = document.getElementById("api-key");
 const toggleKeyVisibilityBtn = document.getElementById("toggle-key-visibility");
 const modelSelect = document.getElementById("model-select");
+const refreshModelsBtn = document.getElementById("refresh-models-btn");
+const modelRefreshStatus = document.getElementById("model-refresh-status");
 const testApiBtn = document.getElementById("test-api-btn");
 const testStatus = document.getElementById("test-status");
 const saveSettingsBtn = document.getElementById("save-settings-btn");
 const resetPromptsBtn = document.getElementById("reset-prompts-btn");
 const themeToggleBtn = document.getElementById("theme-toggle");
 const toastContainer = document.getElementById("toast-container");
+
+// Fallback Gemini models (text generation models version >= 3)
+const DEFAULT_MODELS = [
+  { id: "gemini-3.7-flash", name: "Gemini 3.7 Flash (Recommended)" },
+  { id: "gemini-3.5-flash-lite", name: "Gemini 3.5 Flash-Lite (Fastest)" },
+  { id: "gemini-3.5-flash", name: "Gemini 3.5 Flash" }
+];
+
+/**
+ * Validate that a model is for text and has version >= 3
+ */
+function isEligibleTextModel(id = "", displayName = "", description = "") {
+  const combined = `${id} ${displayName} ${description}`.toLowerCase();
+  
+  // Strictly exclude non-text, TTS (Text-to-Speech), speech, audio, video, image generation, or banana models
+  const excludedKeywords = [
+    "tts",
+    "speech",
+    "text-to-speech",
+    "audio",
+    "voice",
+    "sound",
+    "banana",
+    "image",
+    "imagen",
+    "video",
+    "live",
+    "realtime",
+    "embedding",
+    "aqa",
+    "diffusion",
+    "robotics"
+  ];
+  if (excludedKeywords.some(keyword => combined.includes(keyword))) {
+    return false;
+  }
+
+  // Must be a Gemini model
+  if (!combined.includes("gemini")) {
+    return false;
+  }
+
+  // Must have version >= 3
+  const versionMatch = combined.match(/gemini[/-]?(\d+(?:\.\d+)?)/i);
+  if (!versionMatch) {
+    return false;
+  }
+
+  const versionNum = parseFloat(versionMatch[1]);
+  return !isNaN(versionNum) && versionNum >= 3.0;
+}
+
+/**
+ * Populate the model dropdown dynamically
+ */
+function populateModelDropdown(models, selectedValue) {
+  if (!modelSelect) return;
+  const filtered = (Array.isArray(models) && models.length > 0)
+    ? models.filter(m => isEligibleTextModel(m.id, m.name, m.description))
+    : DEFAULT_MODELS;
+  const list = filtered.length > 0 ? filtered : DEFAULT_MODELS;
+  const defaultFallback = list[0]?.id || "gemini-3.7-flash";
+
+  let currentVal = selectedValue || modelSelect.value || defaultFallback;
+  if (!isEligibleTextModel(currentVal)) {
+    currentVal = defaultFallback;
+    chrome.storage.local.set({ selectedModel: currentVal });
+  }
+
+  modelSelect.innerHTML = "";
+
+  let found = false;
+  list.forEach(m => {
+    const opt = document.createElement("option");
+    opt.value = m.id;
+    opt.textContent = m.name;
+    if (m.description) {
+      opt.title = m.description;
+    }
+    if (m.id === currentVal) {
+      opt.selected = true;
+      found = true;
+    }
+    modelSelect.appendChild(opt);
+  });
+
+  // Preserve custom model ONLY if it is an eligible text model with version >= 3
+  if (!found && currentVal && isEligibleTextModel(currentVal)) {
+    const customOpt = document.createElement("option");
+    customOpt.value = currentVal;
+    customOpt.textContent = `${currentVal} (Selected)`;
+    customOpt.selected = true;
+    modelSelect.appendChild(customOpt);
+  } else if (!found && modelSelect.options.length > 0) {
+    modelSelect.options[0].selected = true;
+    chrome.storage.local.set({ selectedModel: modelSelect.options[0].value });
+  }
+}
+
+/**
+ * Fetch and refresh available models from Gemini API
+ */
+async function refreshModels(silent = false) {
+  const apiKey = apiKeyInput.value.trim();
+  if (!apiKey) {
+    if (!silent) {
+      playSound("error");
+      showToast("Please enter a Gemini API Key first.", "error");
+    }
+    return;
+  }
+
+  const icon = refreshModelsBtn?.querySelector(".refresh-icon");
+  if (refreshModelsBtn) {
+    refreshModelsBtn.disabled = true;
+    if (icon) icon.classList.add("spinning");
+  }
+
+  if (modelRefreshStatus) {
+    modelRefreshStatus.classList.remove("hidden");
+    modelRefreshStatus.textContent = "Checking Gemini API for available models...";
+  }
+
+  return new Promise((resolve) => {
+    chrome.runtime.sendMessage(
+      { action: "fetchAvailableModels", apiKey: apiKey },
+      (response) => {
+        if (refreshModelsBtn) {
+          refreshModelsBtn.disabled = false;
+          if (icon) icon.classList.remove("spinning");
+        }
+
+        if (chrome.runtime.lastError) {
+          const err = chrome.runtime.lastError.message;
+          if (!silent) {
+            playSound("error");
+            showToast(`Failed to refresh models: ${err}`, "error");
+          }
+          if (modelRefreshStatus) {
+            modelRefreshStatus.textContent = "Failed to refresh models.";
+          }
+          resolve(false);
+          return;
+        }
+
+        if (response && response.success && Array.isArray(response.models)) {
+          populateModelDropdown(response.models, modelSelect.value);
+          const count = response.models.length;
+          if (!silent) {
+            playSound("success");
+            showToast(`Found ${count} available Gemini models!`, "success");
+          }
+          if (modelRefreshStatus) {
+            const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+            modelRefreshStatus.textContent = `Updated: ${count} models available (${timeStr})`;
+          }
+          resolve(true);
+        } else {
+          const errMsg = response?.error || "Unable to fetch models.";
+          if (!silent) {
+            playSound("error");
+            showToast(errMsg, "error");
+          }
+          if (modelRefreshStatus) {
+            modelRefreshStatus.textContent = "Error fetching models.";
+          }
+          resolve(false);
+        }
+      }
+    );
+  });
+}
 
 // Behavior Configuration Elements
 const autoOpenToggle = document.getElementById("auto-open-toggle");
@@ -344,12 +518,39 @@ testApiBtn.addEventListener("click", async () => {
       if (response && response.success) {
         playSound("success");
         setTestResult(true, `Success! Response: "${response.text.trim()}"`);
+        // Automatically discover and refresh models on successful connection
+        refreshModels(true);
       } else {
         playSound("error");
         setTestResult(false, response?.error || "Failed to get response", response?.status);
       }
     }
   );
+});
+
+// Refresh models button click listener
+if (refreshModelsBtn) {
+  refreshModelsBtn.addEventListener("click", () => {
+    playSound("click");
+    refreshModels(false);
+  });
+}
+
+// Listen for storage changes from background or popup
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "local") {
+    if (changes.availableModels) {
+      populateModelDropdown(changes.availableModels.newValue, modelSelect?.value);
+    }
+    if (changes.selectedModel && modelSelect) {
+      modelSelect.value = changes.selectedModel.newValue;
+    }
+    if (changes.modelsLastRefreshed && modelRefreshStatus) {
+      const d = new Date(changes.modelsLastRefreshed.newValue);
+      modelRefreshStatus.classList.remove("hidden");
+      modelRefreshStatus.textContent = `Last refreshed: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+    }
+  }
 });
 
 // Theme Toggling
@@ -364,7 +565,7 @@ themeToggleBtn.addEventListener("click", () => {
  */
 async function loadSettings() {
   const keys = [
-    "apiKey", "selectedModel", "autoOpen", "iconPosition", "targetLanguage", "hotkey",
+    "apiKey", "selectedModel", "availableModels", "modelsLastRefreshed", "autoOpen", "iconPosition", "targetLanguage", "hotkey",
     ...Object.keys(DEFAULT_PROMPTS).map(k => `prompt_${k}`)
   ];
   const settings = await chrome.storage.local.get(keys);
@@ -373,7 +574,13 @@ async function loadSettings() {
     apiKeyInput.value = settings.apiKey;
   }
   
-  modelSelect.value = settings.selectedModel || "gemini-3.7-flash";
+  populateModelDropdown(settings.availableModels, settings.selectedModel || "gemini-3.7-flash");
+
+  if (modelRefreshStatus && settings.modelsLastRefreshed) {
+    const d = new Date(settings.modelsLastRefreshed);
+    modelRefreshStatus.classList.remove("hidden");
+    modelRefreshStatus.textContent = `Last refreshed: ${d.toLocaleDateString()} ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  }
 
   // Load behavior settings
   autoOpenToggle.checked = settings.autoOpen !== false;

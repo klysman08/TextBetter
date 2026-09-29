@@ -30,6 +30,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         });
       });
     return true; // Keep message channel open for asynchronous sendResponse
+  } else if (request.action === "fetchAvailableModels") {
+    handleFetchAvailableModels(request.apiKey)
+      .then(models => sendResponse({ success: true, models }))
+      .catch(error => {
+        sendResponse({ 
+          success: false, 
+          error: error.message,
+          status: error.status || null
+        });
+      });
+    return true; // Keep message channel open for asynchronous sendResponse
   } else if (request.action === "openOptionsPage") {
     chrome.runtime.openOptionsPage();
     sendResponse({ success: true });
@@ -46,8 +57,19 @@ async function handleGenerateText(request) {
   // Retrieve API settings from storage
   const settings = await chrome.storage.local.get(["apiKey", "selectedModel"]);
   const apiKey = settings.apiKey;
-  // Default to gemini-3.7-flash
-  const model = settings.selectedModel || "gemini-3.7-flash";
+  // Default to gemini-3.7-flash, sanitize any 'models/' prefix
+  const rawModel = settings.selectedModel || "gemini-3.7-flash";
+  let model = rawModel.replace(/^models\//, "");
+  // Fallback if stored model is a non-text model (such as TTS, speech, banana, or image)
+  if (
+    model.toLowerCase().includes("tts") ||
+    model.toLowerCase().includes("speech") ||
+    model.toLowerCase().includes("banana") ||
+    model.toLowerCase().includes("image") ||
+    model.toLowerCase().includes("imagen")
+  ) {
+    model = "gemini-3.7-flash";
+  }
 
   if (!apiKey) {
     throw new Error("API Key is missing. Please configure your API key in the extension settings.");
@@ -231,5 +253,119 @@ async function appendHistoryRecord({ actionType, actionLabel, inputText, outputT
     await chrome.storage.local.set({ history });
   } catch (err) {
     console.error("Error saving history record:", err);
+  }
+}
+
+/**
+ * Fetch available Gemini models from Google Generative Language API
+ */
+async function handleFetchAvailableModels(explicitApiKey) {
+  let apiKey = explicitApiKey;
+  if (!apiKey) {
+    const settings = await chrome.storage.local.get("apiKey");
+    apiKey = settings.apiKey;
+  }
+
+  if (!apiKey || !apiKey.trim()) {
+    const error = new Error("Gemini API Key is missing. Please configure and save your API key in settings.");
+    error.status = 401;
+    throw error;
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey.trim()}&pageSize=100`;
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData.error?.message || `HTTP error! status: ${response.status}`;
+      const err = new Error(errorMessage);
+      err.status = response.status;
+      throw err;
+    }
+
+    const data = await response.json();
+    const rawModels = data.models || [];
+
+    // Filter for text generation models belonging to Gemini with version >= 3
+    const filteredModels = rawModels.filter(m => {
+      const supportsGenerate = Array.isArray(m.supportedGenerationMethods) &&
+        m.supportedGenerationMethods.includes("generateContent");
+      if (!supportsGenerate) return false;
+
+      const combined = `${m.name || ""} ${m.displayName || ""} ${m.description || ""}`.toLowerCase();
+
+      // Exclude non-text, TTS (Text-to-Speech), speech, audio, video, image generation, or banana models
+      const excludedKeywords = [
+        "tts",
+        "speech",
+        "text-to-speech",
+        "audio",
+        "voice",
+        "sound",
+        "banana",
+        "image",
+        "imagen",
+        "video",
+        "live",
+        "realtime",
+        "embedding",
+        "aqa",
+        "diffusion",
+        "robotics"
+      ];
+      if (excludedKeywords.some(keyword => combined.includes(keyword))) {
+        return false;
+      }
+
+      // Must be a Gemini model
+      if (!combined.includes("gemini")) {
+        return false;
+      }
+
+      // Extract version number (e.g., gemini-3.7-flash -> 3.7, gemini-3.5-flash -> 3.5)
+      const versionMatch = combined.match(/gemini[/-]?(\d+(?:\.\d+)?)/i);
+      if (!versionMatch) return false;
+
+      const versionNum = parseFloat(versionMatch[1]);
+      return !isNaN(versionNum) && versionNum >= 3.0;
+    });
+
+    // Format models cleanly
+    const formattedModels = filteredModels.map(m => {
+      const id = m.name.replace(/^models\//, "");
+      const displayName = m.displayName || id;
+      return {
+        id: id,
+        name: displayName,
+        description: m.description || ""
+      };
+    });
+
+    // Sort: prioritize flash models, followed by pro, then version descending
+    formattedModels.sort((a, b) => {
+      const aIsFlash = a.id.includes("flash") ? 1 : 0;
+      const bIsFlash = b.id.includes("flash") ? 1 : 0;
+      if (aIsFlash !== bIsFlash) return bIsFlash - aIsFlash;
+
+      return b.id.localeCompare(a.id, undefined, { numeric: true, sensitivity: "base" });
+    });
+
+    // Save in local storage for fast cached retrieval across popup and options
+    await chrome.storage.local.set({
+      availableModels: formattedModels,
+      modelsLastRefreshed: Date.now()
+    });
+
+    return formattedModels;
+  } catch (error) {
+    console.error("Error fetching available models:", error);
+    throw error;
   }
 }
